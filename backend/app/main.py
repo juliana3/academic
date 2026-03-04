@@ -1,0 +1,1 @@
+#instancia de fastapi y registro de los routers

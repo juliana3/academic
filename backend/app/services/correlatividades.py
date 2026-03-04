@@ -1,0 +1,1 @@
+# verifica si una materia esta habilitada

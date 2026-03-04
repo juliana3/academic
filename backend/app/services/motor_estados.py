@@ -1,0 +1,1 @@
+#calcula estados de una materia"
