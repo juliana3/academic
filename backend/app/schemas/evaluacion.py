@@ -1,3 +1,5 @@
+from backend.app.schemas.alerta import AlertaRead
+from backend.app.schemas.materia import MateriaRead
 from sqlmodel import SQLModel
 from ..enums import TipoEvaluacion, EstadoEvaluacion, ModalidadFinal
 from datetime import date
@@ -27,3 +29,9 @@ class EvaluacionUpdate(SQLModel):
     nota: float | None = None
     modalidad : ModalidadFinal | None = None
     reemplaza_evaluacion_id: int | None = None
+
+
+class EvaluacionConEstadoMateria(SQLModel):
+    evaluacion: EvaluacionRead
+    materia: MateriaRead
+    alertas: list[AlertaRead] = []

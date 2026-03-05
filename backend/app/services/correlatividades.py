@@ -2,7 +2,7 @@
 
 from ..enums import CondicionRequisito, EstadoMateria, ParaRequisito
 
-def esta_habilitada_para_cursar(materia, requisitos, materias_del_plan) -> bool:
+def esta_habilitada_para_cursar(requisitos, materias_del_plan) -> bool:
     for r in requisitos:
         if r.para == ParaRequisito.cursar:
             materia_requerida = [m for m in materias_del_plan if m.id == r.id_materia_req]
@@ -20,7 +20,7 @@ def esta_habilitada_para_cursar(materia, requisitos, materias_del_plan) -> bool:
     return True
 
 
-def esta_habilitada_para_rendir(materia, requisitos, materias_del_plan) -> bool:
+def esta_habilitada_para_rendir(requisitos, materias_del_plan) -> bool:
     for r in requisitos:
         if r.para == ParaRequisito.rendir_final:
             materia_requerida = [m for m in materias_del_plan if m.id == r.id_materia_req]
