@@ -1,5 +1,5 @@
-from backend.app.schemas.alerta import AlertaRead
-from backend.app.schemas.materia import MateriaRead
+from .alerta import AlertaRead
+from .materia import MateriaRead
 from sqlmodel import SQLModel
 from ..enums import TipoEvaluacion, EstadoEvaluacion, ModalidadFinal
 from datetime import date
