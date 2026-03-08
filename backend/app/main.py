@@ -1,6 +1,7 @@
 #instancia de fastapi y registro de los routers
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from .database import crear_db_y_tablas
 from .models import Plan, Materia, Evaluacion, Horario, Requisito
 from .routers import planes, materias, evaluaciones, horarios, requisitos, alertas
@@ -11,6 +12,14 @@ app = FastAPI()
 @app.on_event("startup")
 def on_startup():
     crear_db_y_tablas()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 app.include_router(planes.router)
 app.include_router(materias.router)
