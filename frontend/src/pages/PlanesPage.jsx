@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useEffect, useContext } from "react";
 import { PlanesContext } from "../store/planesStore"
 import {obtenerPlanes} from "../api/planes"
 
