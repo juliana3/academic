@@ -1,14 +1,16 @@
 from datetime import date
 
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, UploadFile, File
 from sqlmodel import Session, select
 from ..database import get_session
 
 from ..models import Materia, Requisito, Evaluacion
 from ..schemas import MateriaCreate, MateriaUpdate
 
-from ..enums import EstadoMateria
+from ..enums import CondicionRequisito, EstadoMateria, ParaRequisito
 from ..services.correlatividades import esta_habilitada_para_cursar
+
+import openpyxl
 
 router = APIRouter(tags=["materias"])
 
@@ -127,3 +129,60 @@ def reinscribirse_materia(materia_id : int, session : Session = Depends(get_sess
     session.refresh(materia)
 
     return materia
+
+
+@router.post("/planes/{plan_id}/importar")
+def importar_materias(plan_id : int, archivo : UploadFile = File (...), session : Session = Depends(get_session)):
+    materias_creadas = []
+    correlativas_pendientes = []
+
+    workbook = openpyxl.load_workbook(archivo.file)
+    hoja = workbook.active #primera hoja
+    
+    for fila in hoja.iter_rows(min_row=2, values_only=True): # type: ignore
+        nombre, anio, cuatrimestre, tipo, correlativas = fila
+        materia = Materia(
+            id_plan = plan_id,
+            nombre = nombre, # type: ignore
+            anio = anio, # type: ignore
+            periodo = cuatrimestre, # type: ignore
+            tipo = tipo # type: ignore
+        )
+
+        materias_creadas.append(materia)
+        if correlativas:
+            correlativas_pendientes.append((nombre, correlativas))
+
+    # guardar todas las materias
+    for m in materias_creadas:
+        session.add(m)
+    session.commit()
+    for m in materias_creadas:
+        session.refresh(m)
+
+    # procesar correlativas
+    for nombre_materia, correlativas_string in correlativas_pendientes:
+        # buscar la materia que acabamos de crear
+        materia = next((m for m in materias_creadas if m.nombre == nombre_materia), None)
+        if materia is None:
+            continue
+        
+        # separar las correlativas por coma
+        nombres_correlativas = [c.strip() for c in correlativas_string.split(",")]
+        
+        for nombre_req in nombres_correlativas:
+            materia_req = next((m for m in materias_creadas if m.nombre == nombre_req), None)
+            if materia_req is None:
+                continue
+            
+            requisito = Requisito(
+                id_materia=materia.id,
+                id_materia_req=materia_req.id,
+                condicion=CondicionRequisito.regular,
+                para=ParaRequisito.cursar
+            )
+            session.add(requisito)
+    
+    session.commit()
+
+    return {"detail": f"{len(materias_creadas)} materias importadas"}
