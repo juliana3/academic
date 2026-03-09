@@ -23,7 +23,9 @@ def resolver_recuperatorios(evaluaciones):
 def cumple_regularidad(materia, evaluaciones):
     #recibe la mateeria y la lista limpia de parciales. Devuelve true o false
     #regularidad: cada parcial debe tener nota mayor o igual a nota minima de regularidad, cantidad de tps aprobados debe ser mayor o igual a cantidad minima de tps aprobados y promedio debe ser mayor o igual a promedio minimo de regularidad
-
+    if materia.nota_minima_parcial_regular is None:
+        return False
+    
     parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial]
 
     tps_aprobados = [e for e in evaluaciones if e.tipo == TipoEvaluacion.tp and e.estado == EstadoEvaluacion.aprobado]
@@ -42,7 +44,9 @@ def cumple_regularidad(materia, evaluaciones):
 def cumple_promocion(materia, evaluaciones):
     #recibe la mateeria y la lista limpia de parciales. Devuelve true o false
     #promocion: cada parcial debe tener nota mayor o igual a nota minima de promocions y promedio debe ser mayor o igual a promedio minimo de promocion
-
+    if materia.nota_minima_parcial_promocion is None:
+        return False
+    
     parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial]
     if materia.tipo_aprobacion == TipoAprobacion.solo_final:
         return False
@@ -72,6 +76,9 @@ def calcular_estado(materia, evaluaciones):
 
     if final and final[0].estado == EstadoEvaluacion.aprobado and (final[0].modalidad == ModalidadFinal.regular or final[0].modalidad == ModalidadFinal.libre):
         return EstadoMateria.aprobada
+    
+    if materia.tipo_aprobacion is None or materia.nota_minima_parcial_regular is None:
+        return EstadoMateria.cursando
     
     if not cumple_regularidad(materia, evaluaciones_limpias):
         return EstadoMateria.libre

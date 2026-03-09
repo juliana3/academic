@@ -1,0 +1,45 @@
+import { ReactFlow } from "@xyflow/react"
+import "@xyflow/react/dist/style.css" 
+import { useParams } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { obtenerMaterias } from "../api/materias"
+
+
+function PlanDetalle() {
+    const {planId} = useParams()
+    const [materias, setMaterias] = useState([])
+
+    useEffect(() => {
+        obtenerMaterias(planId).then(data => {
+            console.log(data),
+            setMaterias(data)})
+    }, [planId])
+
+    const coloresPorEstado = {
+        sin_cursar: { background: "#cccccc", opacity: 0.5 },
+        cursando: { background: "#4a90d9" },
+        regular: { background: "#f5a623" },
+        promocionada: { background: "#7ed321" },
+        libre: { background: "#d0021b" },
+        aprobada: { background: "#417505" }
+    }
+    const nodos = materias.map(materia => ({
+        id: String(materia.id),
+        position: {
+            x: materia.periodo * 250,
+            y: materia.anio *150
+        },
+        data : {label: materia.nombre},
+        style: coloresPorEstado[materia.estado]
+    }))
+    const edges =[]
+
+
+    return (
+        <div style={{ width: "100%", height: "100vh"}}>
+            <ReactFlow nodes = {nodos} edges = {edges}/>
+        </div>
+    )
+}
+
+export default PlanDetalle

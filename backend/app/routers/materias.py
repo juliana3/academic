@@ -21,7 +21,7 @@ def listar_materias(plan_id : int, session: Session = Depends(get_session)):
 @router.post("/planes/{plan_id}/materias")
 #crear una materia para un plan
 def crear_materia(plan_id : int, materia_data : MateriaCreate, session: Session = Depends(get_session)):
-    materia = Materia.model_validate(materia_data)
+    materia = Materia(id_plan=plan_id, **materia_data.model_dump())
     materia.id_plan = plan_id
     session.add(materia)
     session.commit()

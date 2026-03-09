@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import PlanesPage from './pages/PlanesPage'
-import MateriasPage from './pages/MateriasPage'
 import MateriaDetalle from './pages/MateriaDetalle'
+import PlanDetalle from './pages/PlanDetalle'
 
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<div>Dashboard</div>}/>
         <Route path="/planes" element={<PlanesPage/>}/>
-        <Route path="/planes/:planId/materias" element={<MateriasPage/>}/>
+        <Route path="/planes/:planId" element={<PlanDetalle/>}/>
         <Route path ="/materias/:materiaId" element={<MateriaDetalle/>}/>
       </Routes>
     </BrowserRouter>

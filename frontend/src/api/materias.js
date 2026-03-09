@@ -16,7 +16,7 @@ async function crearMateria(planId, datos){
         const respuesta = await api.post("/planes/"+planId+"/materias", datos)
         return respuesta.data
     }catch (error){
-        console.error("Error", error)
+        console.error("Detalle Error", error.response.data)
         throw error
     }
 }
