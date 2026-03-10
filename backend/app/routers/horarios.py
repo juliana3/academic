@@ -21,7 +21,7 @@ def crear_horario(materia_id : int, horario_data : HorarioCreate, session : Sess
     if materia is None:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
     
-    horario = Horario.model_validate(horario_data)
+    horario = Horario(id_materia=materia_id, **horario_data.model_dump())
     horario.id_materia = materia_id
 
     session.add(horario)

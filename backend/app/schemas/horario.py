@@ -8,7 +8,7 @@ class HorarioBase(SQLModel):
     hora_fin: time
 
 class HorarioCreate(HorarioBase):
-    id_materia: int
+    pass
 
 class HorarioRead(HorarioBase):
     id: int

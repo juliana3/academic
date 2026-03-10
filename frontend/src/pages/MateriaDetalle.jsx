@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { obtenerMateria, inscribirMateria, reinscribirMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion } from "../api/evaluaciones";
-import { obtenerHorarios } from "../api/horarios";
+import { obtenerHorarios, crearHorario } from "../api/horarios";
 
 function MateriaDetalle(){
     const {materiaId} = useParams()
@@ -10,12 +10,19 @@ function MateriaDetalle(){
     const [evaluaciones, setEvaluaciones] = useState([])
     const [horarios, setHorarios] = useState([])
     const [error, setError] = useState(null)
+
     const [formEvaluacion, setFormEvaluacion] = useState({
         tipo: "parcial",
         numero_de_instancia : "",
         fecha : "",
         nota: "",
         estado  : "pendiente"
+    })
+
+    const [formHorario, setFormHorario] = useState({
+        dia_semana : "lunes",
+        hora_inicio: "",
+        hora_fin : ""
     })
 
     const handleInscribir = () => {
@@ -48,6 +55,15 @@ function MateriaDetalle(){
             })
     }
 
+    const handleCrearHorario = () => {
+        crearHorario(materiaId, formHorario).then(data => {
+            setHorarios([...horarios, data])
+            setError(null)
+        }).catch(err => {
+            const detail = err.response.data.detail
+            setError(typeof detail === "string" ? detail: JSON.stringify(detail))
+        })
+    }
 
     useEffect(() => {
         obtenerMateria(materiaId).then(data => setMateria(data))
@@ -116,6 +132,22 @@ function MateriaDetalle(){
                         <p>{horario.hora_fin}</p>
                     </div>
                 ))}
+
+                <div>
+                    <select value={formHorario.dia_semana} onChange={e => setFormHorario({...formHorario, dia_semana: e.target.value})}>
+                        <option value="lunes">Lunes</option>
+                        <option value="martes">Martes</option>
+                        <option value="miercoles">Miércoles</option>
+                        <option value="jueves">Jueves</option>
+                        <option value="viernes">Viernes</option>
+                        <option value="sabado">Sábado</option>
+                    </select>
+                    <input type="time" value={formHorario.hora_inicio}
+                        onChange={e => setFormHorario({...formHorario, hora_inicio: e.target.value})} />
+                    <input type="time" value={formHorario.hora_fin}
+                        onChange={e => setFormHorario({...formHorario, hora_fin: e.target.value})} />
+                    <button onClick={handleCrearHorario}>Agregar horario</button>
+                </div>
             </div>
         </div>
 
