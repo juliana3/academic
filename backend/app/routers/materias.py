@@ -135,12 +135,17 @@ def reinscribirse_materia(materia_id : int, session : Session = Depends(get_sess
 def importar_materias(plan_id : int, archivo : UploadFile = File (...), session : Session = Depends(get_session)):
     materias_creadas = []
     correlativas_pendientes = []
+    numero_a_materia = {}
 
     workbook = openpyxl.load_workbook(archivo.file)
     hoja = workbook.active #primera hoja
     
     for fila in hoja.iter_rows(min_row=2, values_only=True): # type: ignore
-        nombre, anio, cuatrimestre, tipo, correlativas = fila
+        numero, nombre, anio, cuatrimestre, tipo, correlativas_cursar, correlativas_rendir, anio_completo = fila
+
+        if nombre is None:
+            continue
+
         materia = Materia(
             id_plan = plan_id,
             nombre = nombre, # type: ignore
@@ -150,8 +155,9 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
         )
 
         materias_creadas.append(materia)
-        if correlativas:
-            correlativas_pendientes.append((nombre, correlativas))
+        numero_a_materia[numero] = materia
+        correlativas_pendientes.append((numero, correlativas_cursar, correlativas_rendir, anio_completo))
+ 
 
     # guardar todas las materias
     for m in materias_creadas:
@@ -161,27 +167,57 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
         session.refresh(m)
 
     # procesar correlativas
-    for nombre_materia, correlativas_string in correlativas_pendientes:
+    for numero, corr_cursar, corr_rendir, anio_completo  in correlativas_pendientes:
         # buscar la materia que acabamos de crear
-        materia = next((m for m in materias_creadas if m.nombre == nombre_materia), None)
+        materia = numero_a_materia.get(numero)
         if materia is None:
             continue
         
-        # separar las correlativas por coma
-        nombres_correlativas = [c.strip() for c in correlativas_string.split(",")]
+        #corre para cursar
+        if corr_cursar:
+            for num_req in str(corr_cursar).split(","):
+                m_req = numero_a_materia.get(int(num_req.strip()))
+                if m_req is None:
+                    continue
+
+                session.add(Requisito(
+                    id_materia = materia.id,
+                    id_materia_req= m_req.id,
+                    condicion = CondicionRequisito.regular,
+                    para= ParaRequisito.cursar
+                ))
+
+        #corre para rendir
+        if corr_rendir:
+            for num_req in str(corr_rendir).split(","):
+                m_req = numero_a_materia.get(int(num_req.strip()))
+                if m_req is None:
+                    continue
+
+                session.add(Requisito( #esto me da todo como errpr
+                    id_materia = materia.id,
+                    id_materia_req = m_req.id,
+                    condicion= CondicionRequisito.aprobada,
+                    para = ParaRequisito.rendir_final
+                ))
+
+
+        #año completo requerido
+        if anio_completo:
+            materias_del_anio = [m for m in materias_creadas if m.anio == anio_completo]
+
+            for m_req in materias_del_anio:
+                if m_req.id == materia.id:
+                    continue
+
+                session.add(Requisito(
+                    id_materia= materia.id,
+                    id_materia_req = m_req.id,
+                    condicion = CondicionRequisito.aprobada,
+                    para = ParaRequisito.rendir_final
+                ))
         
-        for nombre_req in nombres_correlativas:
-            materia_req = next((m for m in materias_creadas if m.nombre == nombre_req), None)
-            if materia_req is None:
-                continue
-            
-            requisito = Requisito(
-                id_materia=materia.id,
-                id_materia_req=materia_req.id,
-                condicion=CondicionRequisito.regular,
-                para=ParaRequisito.cursar
-            )
-            session.add(requisito)
+
     
     session.commit()
 
