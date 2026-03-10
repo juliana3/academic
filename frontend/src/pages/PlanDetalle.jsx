@@ -23,15 +23,23 @@ function PlanDetalle() {
         libre: { background: "#d0021b" },
         aprobada: { background: "#417505" }
     }
-    const nodos = materias.map(materia => ({
-        id: String(materia.id),
-        position: {
-            x: materia.periodo * 250,
-            y: materia.anio *150
-        },
-        data : {label: materia.nombre},
-        style: coloresPorEstado[materia.estado]
-    }))
+    const nodos = materias.map((materia) => {
+        const materiasEnMismaPosicion = materias.filter(
+            m => m.anio === materia.anio && m.periodo === materia.periodo
+        )
+        const posicionEnGrupo = materiasEnMismaPosicion.indexOf(materia)
+
+        return {
+            id: String(materia.id),
+            position: {
+                x: materia.periodo * 250,
+                y: materia.anio *400 + posicionEnGrupo * 120
+            },
+            data : {label: materia.nombre},
+            style: coloresPorEstado[materia.estado]
+        }
+
+    })
     const edges =[]
 
 
