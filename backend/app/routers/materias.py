@@ -89,8 +89,11 @@ def inscribirse_materia(materia_id : int, session : Session = Depends(get_sessio
     materias_plan = session.exec(select(Materia).where(Materia.id_plan == materia.id_plan)).all()
 
     #verifico correlatividades -> 400 si no se cumplen
-    if not esta_habilitada_para_cursar(requisitos, materias_plan):
-        raise HTTPException(status_code=400, detail="No se cumplen los requisitos para cursar esta materia")
+    faltantes = esta_habilitada_para_cursar(requisitos, materias_plan)
+    if faltantes:
+        raise HTTPException(
+            status_code=400, 
+            detail= f"No cumplís los requisitos para cursar! Te falta : {', '.join(faltantes)}")
     
     #seteo fecha de inicio de cursada, estado y guardo
     materia.fecha_inicio_cursada = date.today()

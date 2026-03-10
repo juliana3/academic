@@ -54,9 +54,12 @@ async function eliminarPlan(id){
 }
 
 const obtenerRequisitosDelPlan = (planId) => {
-    return api.get(`/planes/${planId}/requisitos`).then(res => res.data)
+    return api.get("/planes/"+planId+"/requisitos").then(res => res.data)
 }
 
+const obtenerProgreso = (planId) => {
+    return api.get("/planes/"+planId+"/progreso").then(res => res.data)
+}
 
 export{ 
     obtenerPlanes,
@@ -64,5 +67,6 @@ export{
     obtenerPlan,
     actualizarPlan,
     eliminarPlan,
-    obtenerRequisitosDelPlan
+    obtenerRequisitosDelPlan,
+    obtenerProgreso
 }

@@ -2,8 +2,9 @@ from fastapi import Depends, APIRouter, HTTPException
 from sqlmodel import Session, select
 from ..database import get_session
 
-from ..models import Plan
+from ..models import Plan, Materia
 from ..schemas import PlanCreate, PlanUpdate
+from ..enums import EstadoMateria
 
 router = APIRouter(prefix="/planes", tags=["planes"])
 
@@ -54,3 +55,16 @@ def eliminar_plan(plan_id: int, session : Session = Depends(get_session)):
     session.delete(plan)
     session.commit()
     return {"detail": "Plan eliminado"}
+
+
+@router.get("/{plan_id}/progreso")
+def obtener_progreso(plan_id : int, session : Session = Depends(get_session)):
+    materias = session.exec(select(Materia).where(Materia.id_plan == plan_id)).all()
+
+    total = len(materias)
+    aprobadas = len([m for m in materias if m.estado == EstadoMateria.aprobada])
+    cursando = len([m for m in materias if m.estado == EstadoMateria.cursando])
+
+    return {
+        "total": total, "aprobadas" : aprobadas, "cursando": cursando
+    }
