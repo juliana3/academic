@@ -1,13 +1,15 @@
 import { ReactFlow } from "@xyflow/react"
 import "@xyflow/react/dist/style.css" 
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { obtenerMaterias } from "../api/materias"
 
 
 function PlanDetalle() {
+    const navigate = useNavigate()
     const {planId} = useParams()
     const [materias, setMaterias] = useState([])
+    const [materiaSeleccionada, setMateriaSeleccionada] = useState(null)
 
     useEffect(() => {
         obtenerMaterias(planId).then(data => {
@@ -44,8 +46,32 @@ function PlanDetalle() {
 
 
     return (
-        <div style={{ width: "100%", height: "100vh"}}>
-            <ReactFlow nodes = {nodos} edges = {edges}/>
+        <div style={{ display: "flex", width: "100%", height: "100vh" }}>
+            <div style={{ flex: 1 }}>
+                <ReactFlow 
+                    nodes={nodos} 
+                    edges={edges}
+                    onNodeClick={(event, node) => {
+                        const materia = materias.find(m => String(m.id) === node.id)
+                        setMateriaSeleccionada(materia)
+                    }}
+                />
+            </div>
+
+            {materiaSeleccionada && (
+                <div style={{ width: "300px", padding: "20px", borderLeft: "1px solid #ccc", overflowY: "auto" }}>
+                    <button onClick={() => setMateriaSeleccionada(null)}>✕</button>
+                    <h2>{materiaSeleccionada.nombre}</h2>
+                    <p><b>Estado:</b> {materiaSeleccionada.estado}</p>
+                    <p><b>Año:</b> {materiaSeleccionada.anio}</p>
+                    <p><b>Cuatrimestre:</b> {materiaSeleccionada.periodo}</p>
+                    <p><b>Tipo:</b> {materiaSeleccionada.tipo}</p>
+                    <p><b>Tipo de aprobación:</b> {materiaSeleccionada.tipo_aprobacion ?? "No configurado"}</p>
+                    <button onClick={() => navigate(`/materias/${materiaSeleccionada.id}`)}>
+                        Ver detalle completo
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
