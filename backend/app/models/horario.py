@@ -8,3 +8,5 @@ class Horario(SQLModel, table=True):
     dia_semana: DiaSemana
     hora_inicio: time
     hora_fin: time
+
+    

@@ -12,3 +12,5 @@ class Evaluacion(SQLModel, table=True):
     estado: EstadoEvaluacion = Field(default=EstadoEvaluacion.pendiente)
     modalidad: ModalidadFinal | None = None
     reemplaza_evaluacion_id: int | None = Field(default=None, foreign_key="evaluacion.id")
+
+    

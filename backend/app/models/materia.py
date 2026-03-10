@@ -20,3 +20,6 @@ class Materia(SQLModel, table=True):
     fecha_estado: date | None = None
     fecha_inicio_cursada: date | None = None
     estado : EstadoMateria = Field(default=EstadoMateria.sin_cursar)
+
+
+    

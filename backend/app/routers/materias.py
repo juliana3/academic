@@ -136,6 +136,7 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
     materias_creadas = []
     correlativas_pendientes = []
     numero_a_materia = {}
+    requisitos_creados = set()
 
     workbook = openpyxl.load_workbook(archivo.file)
     hoja = workbook.active #primera hoja
@@ -166,6 +167,7 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
     for m in materias_creadas:
         session.refresh(m)
 
+
     # procesar correlativas
     for numero, corr_cursar, corr_rendir, anio_completo  in correlativas_pendientes:
         # buscar la materia que acabamos de crear
@@ -173,33 +175,42 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
         if materia is None:
             continue
         
+        
         #corre para cursar
         if corr_cursar:
-            for num_req in str(corr_cursar).split(","):
+            for num_req in str(corr_cursar).split("-"):
                 m_req = numero_a_materia.get(int(num_req.strip()))
                 if m_req is None:
                     continue
 
-                session.add(Requisito(
-                    id_materia = materia.id,
-                    id_materia_req= m_req.id,
-                    condicion = CondicionRequisito.regular,
-                    para= ParaRequisito.cursar
-                ))
+                par = (materia.id, m_req.id)
+                if par not in requisitos_creados:
+                    requisitos_creados.add(par)
+
+                    session.add(Requisito(
+                        id_materia = materia.id,
+                        id_materia_req= m_req.id,
+                        condicion = CondicionRequisito.regular,
+                        para= ParaRequisito.cursar
+                    ))
 
         #corre para rendir
         if corr_rendir:
-            for num_req in str(corr_rendir).split(","):
+            for num_req in str(corr_rendir).split("-"):
                 m_req = numero_a_materia.get(int(num_req.strip()))
                 if m_req is None:
                     continue
 
-                session.add(Requisito( #esto me da todo como errpr
-                    id_materia = materia.id,
-                    id_materia_req = m_req.id,
-                    condicion= CondicionRequisito.aprobada,
-                    para = ParaRequisito.rendir_final
-                ))
+                par = (materia.id, m_req.id)
+                if par not in requisitos_creados:
+                    requisitos_creados.add(par)
+
+                    session.add(Requisito(
+                        id_materia = materia.id,
+                        id_materia_req = m_req.id,
+                        condicion= CondicionRequisito.aprobada,
+                        para = ParaRequisito.rendir_final
+                    ))
 
 
         #año completo requerido
@@ -210,12 +221,16 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
                 if m_req.id == materia.id:
                     continue
 
-                session.add(Requisito(
-                    id_materia= materia.id,
-                    id_materia_req = m_req.id,
-                    condicion = CondicionRequisito.aprobada,
-                    para = ParaRequisito.rendir_final
-                ))
+                par = (materia.id, m_req.id)
+                if par not in requisitos_creados:
+                    requisitos_creados.add(par)
+
+                    session.add(Requisito(
+                        id_materia= materia.id,
+                        id_materia_req = m_req.id,
+                        condicion = CondicionRequisito.aprobada,
+                        para = ParaRequisito.rendir_final
+                    ))
         
 
     

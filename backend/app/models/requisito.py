@@ -4,8 +4,8 @@ from sqlalchemy import UniqueConstraint # type: ignore
 
 class Requisito(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    id_materia: int = Field(foreign_key="materia.id") #es materia.id_materia o materia.id? yo declare id solo en las clases
-    id_materia_req: int = Field(foreign_key="materia.id")
+    id_materia: int = Field(foreign_key="materia.id", ondelete="CASCADE") 
+    id_materia_req: int = Field(foreign_key="materia.id", ondelete="CASCADE")
 
     condicion : CondicionRequisito
     para: ParaRequisito
@@ -13,3 +13,4 @@ class Requisito(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("id_materia", "id_materia_req"),
     )
+    

@@ -9,3 +9,4 @@ class Plan(SQLModel, table=True):
     institucion: str | None = None
     fecha_inicio: date
     esta_activo: bool = Field(default=True)
+    
