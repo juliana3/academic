@@ -23,7 +23,7 @@ def crear_evaluacion(materia_id: int, evaluacion_data: EvaluacionCreate, session
     if materia is None:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
 
-    evaluacion = Evaluacion.model_validate(evaluacion_data)
+    evaluacion = Evaluacion(id_materia= materia_id, **evaluacion_data.model_dump())
     evaluacion.id_materia = materia_id
 
     session.add(evaluacion)

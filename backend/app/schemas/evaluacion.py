@@ -14,7 +14,7 @@ class EvaluacionBase(SQLModel):
     
 
 class EvaluacionCreate(EvaluacionBase):
-    id_materia: int
+    pass
 
 
 class EvaluacionRead(EvaluacionBase):

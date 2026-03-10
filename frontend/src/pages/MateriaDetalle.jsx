@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { obtenerMateria } from "../api/materias";
-import { obtenerEvaluaciones } from "../api/evaluaciones";
+import { obtenerMateria, inscribirMateria, reinscribirMateria } from "../api/materias";
+import { obtenerEvaluaciones, crearEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios } from "../api/horarios";
 
 function MateriaDetalle(){
@@ -9,6 +9,45 @@ function MateriaDetalle(){
     const [materia, setMateria] = useState(null)
     const [evaluaciones, setEvaluaciones] = useState([])
     const [horarios, setHorarios] = useState([])
+    const [error, setError] = useState(null)
+    const [formEvaluacion, setFormEvaluacion] = useState({
+        tipo: "parcial",
+        numero_de_instancia : "",
+        fecha : "",
+        nota: "",
+        estado  : "pendiente"
+    })
+
+    const handleInscribir = () => {
+        inscribirMateria(materiaId).then(data => {
+            setMateria(data)
+            setError(null)
+        }).catch(err => setError(err.response.data.detail))
+    }
+    const handleReinscribir = () => {
+        reinscribirMateria(materiaId).then(data => {
+            setMateria(data)
+            setError(null)
+        }).catch(err => setError(err.response.data.detail))
+    }
+    const handleEvaluacion = () => {
+        const datos = {
+            ...formEvaluacion,
+            nota: formEvaluacion.nota === "" ? null : parseFloat(formEvaluacion.nota),
+            numero_de_instancia: formEvaluacion.numero_de_instancia === "" ? null : parseInt(formEvaluacion.numero_de_instancia)
+        }
+        crearEvaluacion(materiaId, datos)
+            .then(data => {
+                setEvaluaciones([...evaluaciones, data.evaluacion])
+                setMateria(data.materia)
+                setError(null)
+            })
+            .catch(err => {
+                const detail = err.response.data.detail
+                setError(typeof detail === "string" ? detail : JSON.stringify(detail))
+            })
+    }
+
 
     useEffect(() => {
         obtenerMateria(materiaId).then(data => setMateria(data))
@@ -29,7 +68,13 @@ function MateriaDetalle(){
                 {materia && (
                     <div>
                         <h1>{materia.nombre}</h1>
-                        <p>Estado : {materia.estado}</p>
+                        {error && <p style= {{color: "red"}}>{error}</p>}
+                        {materia.estado === "sin_cursar" && (
+                            <button onClick={handleInscribir}>Inscribirsse</button>
+                        )}
+                        {materia.estado === "libre" && (
+                            <button onClick={handleReinscribir}>Reinscribirse</button>
+                        )}
                     </div>
                 )}
                 <h1>Evaluaciones</h1>
@@ -41,6 +86,26 @@ function MateriaDetalle(){
                         <p>{evaluacion.estado}</p>
                     </div>
                 ))}
+
+                <div>
+                    <select value={formEvaluacion.tipo} onChange={e => setFormEvaluacion({...formEvaluacion, tipo: e.target.value})}>
+                        <option value="parcial">Parcial</option>
+                        <option value="tp">TP</option>
+                        <option value="final">Final</option>
+                    </select>
+                    <input type="number" placeholder="Instancia" value={formEvaluacion.numero_de_instancia}
+                        onChange={e => setFormEvaluacion({...formEvaluacion, numero_de_instancia: e.target.value})} />
+                    <input type="date" value={formEvaluacion.fecha}
+                        onChange={e => setFormEvaluacion({...formEvaluacion, fecha: e.target.value})} />
+                    <input type="number" placeholder="Nota" value={formEvaluacion.nota}
+                        onChange={e => setFormEvaluacion({...formEvaluacion, nota: e.target.value})} />
+                    <select value={formEvaluacion.estado} onChange={e => setFormEvaluacion({...formEvaluacion, estado: e.target.value})}>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="aprobado">Aprobado</option>
+                        <option value="desaprobado">Desaprobado</option>
+                    </select>
+                    <button onClick={handleEvaluacion}>Agregar evaluación</button>
+                </div>
             </div>
             <div>
                 <h1>Horarios</h1>
