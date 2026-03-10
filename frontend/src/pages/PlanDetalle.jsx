@@ -3,6 +3,7 @@ import "@xyflow/react/dist/style.css"
 import { useParams, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { obtenerMaterias } from "../api/materias"
+import {obtenerRequisitosDelPlan} from "../api/planes"
 
 
 function PlanDetalle() {
@@ -10,12 +11,15 @@ function PlanDetalle() {
     const {planId} = useParams()
     const [materias, setMaterias] = useState([])
     const [materiaSeleccionada, setMateriaSeleccionada] = useState(null)
+    const [requisitos, setRequisitos] = useState([])
 
     useEffect(() => {
         obtenerMaterias(planId).then(data => {
             console.log(data),
             setMaterias(data)})
+            obtenerRequisitosDelPlan(planId).then(data => setRequisitos(data))
     }, [planId])
+
 
     const coloresPorEstado = {
         sin_cursar: { background: "#cccccc", opacity: 0.5 },
@@ -42,7 +46,13 @@ function PlanDetalle() {
         }
 
     })
-    const edges =[]
+    const edges = requisitos.map(req => ({
+        id: `${req.id_materia}-${req.id_materia_req}-${req.para}`,
+        source: String(req.id_materia_req),
+        target: String(req.id_materia),
+        animated: req.para === "rendir_final",
+        style: { stroke: req.para === "rendir_final" ? "#d0021b" : "#555" }
+    }))
 
 
     return (

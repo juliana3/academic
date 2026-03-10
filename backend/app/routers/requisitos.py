@@ -1,5 +1,5 @@
 from fastapi import Depends, APIRouter, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 from ..database import get_session
 
 from ..models import Requisito, Materia
@@ -73,3 +73,11 @@ def esta_habilitada(materia_id : int, session : Session = Depends(get_session)):
     esta_habilitada = esta_habilitada_para_cursar(requisitos, materias_del_plan)
     return {"habilitada" : esta_habilitada}
 
+
+@router.get("/planes/{plan_id}/requisitos")
+def listar_requisitos_plan(plan_id : int, session: Session = Depends(get_session)):
+    materias = session.exec(select(Materia).where(Materia.id_plan == plan_id)).all()
+    ids_materias = [m.id for m in materias]
+    requisitos = session.exec(select(Requisito).where(col(Requisito.id_materia).in_(ids_materias))).all()
+
+    return requisitos

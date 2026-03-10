@@ -53,10 +53,16 @@ async function eliminarPlan(id){
     }
 }
 
+const obtenerRequisitosDelPlan = (planId) => {
+    return api.get(`/planes/${planId}/requisitos`).then(res => res.data)
+}
+
+
 export{ 
     obtenerPlanes,
     crearPlan,
     obtenerPlan,
     actualizarPlan,
-    eliminarPlan
+    eliminarPlan,
+    obtenerRequisitosDelPlan
 }
