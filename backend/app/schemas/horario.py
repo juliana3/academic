@@ -6,6 +6,7 @@ class HorarioBase(SQLModel):
     dia_semana: DiaSemana
     hora_inicio: time
     hora_fin: time
+    nombre : str | None = None
 
 class HorarioCreate(HorarioBase):
     pass

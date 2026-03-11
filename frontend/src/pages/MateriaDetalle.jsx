@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { obtenerMateria, inscribirMateria, reinscribirMateria } from "../api/materias";
+import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios, crearHorario } from "../api/horarios";
 
@@ -22,7 +22,8 @@ function MateriaDetalle(){
     const [formHorario, setFormHorario] = useState({
         dia_semana : "lunes",
         hora_inicio: "",
-        hora_fin : ""
+        hora_fin : "",
+        nombre : ""
     })
 
     const handleInscribir = () => {
@@ -65,6 +66,13 @@ function MateriaDetalle(){
         })
     }
 
+    const handleAprobar = () => {
+        aprobarMateria(materiaId).then(data => {
+            setMateria(data)
+            setError(null)
+        }).catch(err => setError(err.response.data.detail))
+    }
+
     useEffect(() => {
         obtenerMateria(materiaId).then(data => setMateria(data))
     }, [materiaId])
@@ -90,6 +98,9 @@ function MateriaDetalle(){
                         )}
                         {materia.estado === "libre" && (
                             <button onClick={handleReinscribir}>Reinscribirse</button>
+                        )}
+                        {materia.estado !== "aprobada" && (
+                            <button onClick={handleAprobar}>Marcar como aprobada</button>
                         )}
                     </div>
                 )}
@@ -127,9 +138,7 @@ function MateriaDetalle(){
                 <h1>Horarios</h1>
                 {Array.isArray(horarios) && horarios.map(horario => (
                     <div key={horario.id}>
-                        <p>{horario.dia_semana}</p>
-                        <p>{horario.hora_inicio}</p>
-                        <p>{horario.hora_fin}</p>
+                        <p>{horario.nombre ? `${horario.nombre} — ` : ""}{horario.dia_semana} {horario.hora_inicio} - {horario.hora_fin}</p>
                     </div>
                 ))}
 
@@ -146,6 +155,8 @@ function MateriaDetalle(){
                         onChange={e => setFormHorario({...formHorario, hora_inicio: e.target.value})} />
                     <input type="time" value={formHorario.hora_fin}
                         onChange={e => setFormHorario({...formHorario, hora_fin: e.target.value})} />
+                    <input type="text" placeholder="Nombre (ej: Teoría, Práctica)"value={formHorario.nombre ?? ""}
+                        onChange={e => setFormHorario({...formHorario, nombre: e.target.value})} />
                     <button onClick={handleCrearHorario}>Agregar horario</button>
                 </div>
             </div>

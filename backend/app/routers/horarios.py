@@ -37,7 +37,7 @@ def crear_horario(materia_id : int, horario_data : HorarioCreate, session : Sess
 
    
     
-@router.get("/calendario")
+@router.get("/horarios/calendario")
 def calendario(session: Session = Depends(get_session)):
     
     # materias cursando

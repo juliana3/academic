@@ -37,7 +37,11 @@ function Dashboard() {
             })
         })
         obtenerAlertasActivas().then(data => setAlertas(data.alertas))
-        obtenerCalendario().then(setDatosCal)
+
+        obtenerCalendario().then( data => {
+            console.log("datos calendario: ", data)
+            setDatosCal(data)})
+        
     }, [])
 
     const alertasFiltradas = alertas.filter(a => a.tipo !== "bloqueada_correlativa")
@@ -49,10 +53,11 @@ function Dashboard() {
             daysOfWeek: [DIAS[h.dia_semana]],
             startTime: h.hora_inicio,
             endTime: h.hora_fin,
+            startRecur: "2020-01-01",
             backgroundColor: "#4a90d9",
             borderColor: "#4a90d9"
         })),
-        ...datosCaal.evaluaciones.map(e => ({
+        ...datosCal.evaluaciones.map(e => ({
             id: e.id,
             title: e.titulo,
             start: e.fecha,

@@ -73,6 +73,8 @@ async function reinscribirMateria(materiaId){
     }
 }
 
+const aprobarMateria = (materiaId) =>
+    api.post("/materias/"+materiaId+"/aprobar").then(res => res.data)
 
 export {
     obtenerMaterias,
@@ -81,5 +83,6 @@ export {
     actualizarMateria,
     eliminarMateria,
     inscribirMateria,
-    reinscribirMateria
+    reinscribirMateria,
+    aprobarMateria
 }

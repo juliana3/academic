@@ -240,3 +240,21 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
     session.commit()
 
     return {"detail": f"{len(materias_creadas)} materias importadas"}
+
+
+@router.post("/materias/{materia_id}/aprobar")
+def aprobar_materia(materia_id: int, session: Session = Depends(get_session)):
+    materia = session.get(Materia, materia_id)
+    if materia is None:
+        raise HTTPException(status_code=404, detail="Materia no encontrada")
+    
+    if materia.estado == EstadoMateria.aprobada:
+        raise HTTPException(status_code=400, detail="La materia ya está aprobada")
+    
+    materia.estado = EstadoMateria.aprobada
+    materia.fecha_estado = date.today()
+
+    session.add(materia)
+    session.commit()
+    session.refresh(materia)
+    return materia
