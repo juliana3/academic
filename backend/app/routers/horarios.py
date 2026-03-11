@@ -1,9 +1,10 @@
 from fastapi import Depends, APIRouter, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 from ..database import get_session
 
-from ..models import Horario, Materia
+from ..models import Horario, Materia, Evento, Evaluacion
 from ..schemas.horario import HorarioCreate, HorarioUpdate
+from ..enums import EstadoMateria
 
 from ..services.horarios import detectar_superposiciones
 router = APIRouter(tags=["horarios"])
@@ -34,7 +35,71 @@ def crear_horario(materia_id : int, horario_data : HorarioCreate, session : Sess
 
     return {"horario": horario, "superposiciones": superposiciones}
 
+   
     
+@router.get("/calendario")
+def calendario(session: Session = Depends(get_session)):
+    
+    # materias cursando
+    materias_cursando = session.exec(
+        select(Materia).where(Materia.estado == EstadoMateria.cursando)
+    ).all()
+    ids_materias = [m.id for m in materias_cursando]
+
+    # horarios
+    horarios = session.exec(
+        select(Horario).where(col(Horario.id_materia).in_(ids_materias))
+    ).all()
+
+    horarios_data = []
+
+    for h in horarios:
+        materia = next(m for m in materias_cursando if m.id == h.id_materia)
+        horarios_data.append({
+            "id": f"horario-{h.id}",
+            "dia_semana": h.dia_semana,
+            "hora_inicio": str(h.hora_inicio),
+            "hora_fin": str(h.hora_fin),
+            "materia_nombre": materia.nombre,
+            "materia_id": materia.id
+        })
+
+    # evaluaciones
+    evaluaciones = session.exec(
+        select(Evaluacion).where(col(Evaluacion.id_materia).in_(ids_materias))
+    ).all()
+
+    eventos_evaluaciones = []
+    
+    for e in evaluaciones:
+        if e.fecha is None:
+            continue
+        materia = next(m for m in materias_cursando if m.id == e.id_materia)
+        eventos_evaluaciones.append({
+            "id": f"eval-{e.id}",
+            "titulo": f"{e.tipo} - {materia.nombre}",
+            "fecha": str(e.fecha),
+            "materia_id": materia.id
+        })
+
+    # eventos personales
+    eventos = session.exec(select(Evento)).all()
+    eventos_data = [
+        {
+            "id": f"evento-{ev.id}",
+            "titulo": ev.titulo,
+            "fecha_inicio": str(ev.fecha_inicio),
+            "fecha_fin": str(ev.fecha_fin) if ev.fecha_fin else None,
+            "color": ev.color
+        }
+        for ev in eventos
+    ]
+
+    return {
+        "horarios": horarios_data,
+        "evaluaciones": eventos_evaluaciones,
+        "eventos": eventos_data
+    }
 
 
 @router.put("/horarios/{horario_id}")
@@ -68,3 +133,7 @@ def eliminar_horario(horario_id : int, session: Session = Depends(get_session)):
     session.commit()
 
     return{"detail": "Horario eliminado"}
+
+
+
+

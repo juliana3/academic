@@ -4,3 +4,4 @@ from .evaluacion import EvaluacionBase, EvaluacionCreate, EvaluacionUpdate, Eval
 from .horario import HorarioBase, HorarioCreate, HorarioUpdate, HorarioRead
 from .requisito import RequisitoBase, RequisitoCreate, RequisitoRead
 from .alerta import AlertaRead, AlertaResponse
+from .evento import EventoCreate, EventoRead, EventoUpdate
