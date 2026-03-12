@@ -25,6 +25,7 @@ function Dashboard() {
     const [alertas, setAlertas] = useState([])
     const [datosCal, setDatosCal] = useState(null)
     const [formEvento, setFormEvento] = useState(null)
+    const [alertasDescartadas, setAlertasDescartadas] = useState([])
 
     useEffect(() => {
         obtenerPlanes().then(data => {
@@ -36,7 +37,7 @@ function Dashboard() {
                 })
             })
         })
-        obtenerAlertasActivas().then(data => setAlertas(data.alertas))
+        obtenerAlertasActivas().then(data => setAlertas(data.alertas ?? []))
 
         obtenerCalendario().then( data => {
             console.log("datos calendario: ", data)
@@ -44,7 +45,7 @@ function Dashboard() {
         
     }, [])
 
-    const alertasFiltradas = alertas.filter(a => a.tipo !== "bloqueada_correlativa")
+    const alertasFiltradas = (alertas ?? []).filter(a => a.tipo !== "bloqueada_correlativa")
 
     const eventosCalendario = datosCal ? [
         ...datosCal.horarios.map(h => ({
@@ -95,6 +96,12 @@ function Dashboard() {
         const [anio, mes, dia] = fecha.split("-")
         return `${dia}/${mes}/${anio}`
     }
+
+    const descartarAlerta = (index) => {
+        setAlertasDescartadas([...alertasDescartadas, index])
+    }
+
+    const alertasVisibles = alertasFiltradas.filter((_,i) => !alertasDescartadas.includes(i))
 
     return (
         <div>
@@ -173,8 +180,12 @@ function Dashboard() {
                 <div style={{ width: "280px" }}>
                     <h2>Alertas</h2>
                     {alertasFiltradas.length === 0 && <p>Sin alertas</p>}
-                    {alertasFiltradas.map((alerta, i) => (
-                        <div key={i} style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "8px", marginBottom: "8px" }}>
+                    {alertasVisibles.map((alerta, i) => (
+                        <div key={i} style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "8px", marginBottom: "8px", position: "relative"}}>
+                            <button
+                                onClick={() => descartarAlerta(i)}
+                                style = {{position: "absolute", top: "8px", right: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1em"}}
+                            >✕</button>
                             <b>{alerta.tipo}</b>
                             <p>{alerta.mensaje}</p>
                         </div>
