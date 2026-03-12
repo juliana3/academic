@@ -2,7 +2,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from sqlmodel import Session, col, select
 from ..database import get_session
 
-from ..models import Horario, Materia, Evento, Evaluacion
+from ..models import Horario, Materia, Evento, Evaluacion, Plan
 from ..schemas.horario import HorarioCreate, HorarioUpdate
 from ..enums import EstadoMateria
 
@@ -55,12 +55,20 @@ def calendario(session: Session = Depends(get_session)):
 
     for h in horarios:
         materia = next(m for m in materias_cursando if m.id == h.id_materia)
+        plan = session.get(Plan, materia.id_plan)
+        nombre_plan = plan.nombre if plan else ""
+
+        if h.nombre:
+            titulo = f"{materia.nombre} - {h.nombre}"
+        else:
+            titulo = f"{materia.nombre} - {nombre_plan}" if nombre_plan else materia.nombre
+
         horarios_data.append({
             "id": f"horario-{h.id}",
             "dia_semana": h.dia_semana,
             "hora_inicio": str(h.hora_inicio),
             "hora_fin": str(h.hora_fin),
-            "materia_nombre": materia.nombre,
+            "materia_nombre": titulo,            
             "materia_id": materia.id
         })
 

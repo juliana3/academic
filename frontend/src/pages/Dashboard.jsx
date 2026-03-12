@@ -90,6 +90,12 @@ function Dashboard() {
         })
     }
 
+    const formatearFecha = (fecha) => {
+        if (!fecha) return ""
+        const [anio, mes, dia] = fecha.split("-")
+        return `${dia}/${mes}/${anio}`
+    }
+
     return (
         <div>
             {/* Progreso por plan */}
@@ -122,13 +128,15 @@ function Dashboard() {
             {/* Calendario + Alertas */}
             <div style={{ display: "flex", gap: "16px" }}>
                 <div style={{ flex: 1 }}>
+                    
                     {formEvento && (
+                        
                         <div style={{ padding: "10px", border: "1px solid #ccc", marginBottom: "10px", borderRadius: "8px" }}>
                             <h3>Nuevo evento</h3>
                             <input type="text" placeholder="Título"
                                 value={formEvento.titulo}
                                 onChange={e => setFormEvento({...formEvento, titulo: e.target.value})} />
-                            <p>Desde: {formEvento.fecha_inicio} — Hasta: {formEvento.fecha_fin}</p>
+                            <p>Desde: {formatearFecha(formEvento.fecha_inicio)} — Hasta: {formatearFecha(formEvento.fecha_fin)}</p>
                             <input type="color" value={formEvento.color}
                                 onChange={e => setFormEvento({...formEvento, color: e.target.value})} />
                             <button onClick={handleGuardar}>Guardar</button>
@@ -144,10 +152,20 @@ function Dashboard() {
                             right: "dayGridMonth,timeGridWeek"
                         }}
                         locale="es"
+                        firstDay={1}
                         selectable={true}
                         select={handleSeleccion}
                         events={eventosCalendario}
                         height="600px"
+                        eventContent={(arg) => {
+                            const [materia, titulo] = arg.event.title.split(" - ")
+                            return (
+                                <div style={{ padding: "2px 4px" }}>
+                                    <div style={{ fontWeight: "bold", fontSize: "0.85em" }}>{materia}</div>
+                                    {titulo && <div style={{ fontWeight: "normal", fontSize: "0.75em", opacity: 0.85 }}>{titulo}</div>}
+                                </div>
+                            )
+                        }}
                     />
                 </div>
 
