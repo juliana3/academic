@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
-import { obtenerEvaluaciones, crearEvaluacion } from "../api/evaluaciones";
-import { obtenerHorarios, crearHorario } from "../api/horarios";
+import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion } from "../api/evaluaciones";
+import { obtenerHorarios, crearHorario, eliminarHorario } from "../api/horarios";
 
 function MateriaDetalle(){
     const {materiaId} = useParams()
@@ -79,6 +79,23 @@ function MateriaDetalle(){
         return `${dia}/${mes}/${anio}`
     }
 
+    const handleEliminarEvaluacion = (evaluacionId) => {
+        eliminarEvaluacion(evaluacionId).then(() => setEvaluaciones(
+            evaluaciones.filter(e => e.id !== evaluacionId)))
+            .catch(err => setError
+                (err.response.data.detail)
+            )
+    }
+
+    const handleEliminarHorario = (horarioId) => {
+        eliminarHorario(horarioId).then(() => setHorarios(
+            horarios.filter(e => e.id !== horarioId)))
+            .catch(err => setError
+                (err.response.data.detail)
+            )
+    }
+
+
     useEffect(() => {
         obtenerMateria(materiaId).then(data => setMateria(data))
     }, [materiaId])
@@ -123,12 +140,10 @@ function MateriaDetalle(){
                 {materia.estado !== "aprobada" && (
                     <>
                         <h1>Evaluaciones</h1>
-                        {Array.isArray(evaluaciones) && evaluaciones.map(evaluacion => (
+                        {evaluaciones.map(evaluacion => (
                             <div key={evaluacion.id}>
-                                <p>{evaluacion.tipo}</p>
-                                <p>{evaluacion.numero_de_instancia}</p>
-                                <p>{evaluacion.fecha}</p>
-                                <p>{evaluacion.estado}</p>
+                                <p>{evaluacion.tipo} — {evaluacion.fecha} — {evaluacion.estado}</p>
+                                <button onClick={() => handleEliminarEvaluacion(evaluacion.id)}>🗑</button>
                             </div>
                         )) }
 
@@ -160,9 +175,10 @@ function MateriaDetalle(){
                 {materia.estado !== "aprobada" && (
                     <>
                         <h1>Horarios</h1>
-                        {Array.isArray(horarios) && horarios.map(horario => (
+                        {horarios.map(horario => (
                             <div key={horario.id}>
                                 <p>{horario.nombre ? `${horario.nombre} — ` : ""}{horario.dia_semana} {horario.hora_inicio} - {horario.hora_fin}</p>
+                                <button onClick={() => handleEliminarHorario(horario.id)}>🗑</button>
                             </div>
                         ))}
 
