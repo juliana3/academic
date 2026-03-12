@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
-import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion } from "../api/evaluaciones";
+import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion, actualizarEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios, crearHorario, eliminarHorario } from "../api/horarios";
 
 function MateriaDetalle(){
@@ -10,6 +10,7 @@ function MateriaDetalle(){
     const [evaluaciones, setEvaluaciones] = useState([])
     const [horarios, setHorarios] = useState([])
     const [error, setError] = useState(null)
+    const [evaluacionEditando, setEvaluacionEditando] = useState(null)
 
     const [formEvaluacion, setFormEvaluacion] = useState({
         tipo: "parcial",
@@ -95,6 +96,25 @@ function MateriaDetalle(){
             )
     }
 
+    const handleActualizarEvaluacion = () => {
+        const datos = {
+            ...evaluacionEditando,
+            nota: evaluacionEditando.nota === "" ? null : parseFloat(evaluacionEditando.nota),
+            numero_de_instancia: evaluacionEditando.numero_de_instancia === "" ? null : parseInt(evaluacionEditando.numero_de_instancia)
+        }
+
+        actualizarEvaluacion(evaluacionEditando.id, datos)
+            .then(data => {
+                console.log("evaluacion: ", data.evaluacion)
+                console.log("id editando: ", evaluacionEditando.id)
+                setEvaluaciones(evaluaciones.map(e => {
+                    console.log("comparando: ", e.id, data.evaluacion.id)
+                    return e.id === data.evaluacion.id ? data.evaluacion : e}))
+                setMateria(data.materia)
+                setEvaluacionEditando(null)
+                setError(null)
+            }). catch(err => setError(err.response.data.detail))
+    }
 
     useEffect(() => {
         obtenerMateria(materiaId).then(data => setMateria(data))
@@ -142,30 +162,60 @@ function MateriaDetalle(){
                         <h1>Evaluaciones</h1>
                         {evaluaciones.map(evaluacion => (
                             <div key={evaluacion.id}>
-                                <p>{evaluacion.tipo} — {evaluacion.fecha} — {evaluacion.estado}</p>
-                                <button onClick={() => handleEliminarEvaluacion(evaluacion.id)}>🗑</button>
+                                {evaluacionEditando !== null && evaluacionEditando.id === evaluacion.id ? (
+                                    <>
+                                        <select value={evaluacionEditando.tipo ?? ""} onChange={e => setEvaluacionEditando({...evaluacionEditando, tipo: e.target.value})}>
+                                            <option value="parcial">Parcial</option>
+                                            <option value="tp">TP</option>
+                                            <option value="final">Final</option>
+                                        </select>
+                                        <input type="number" value={evaluacionEditando.numero_de_instancia ?? ""}
+                                            onChange={e => setEvaluacionEditando({...evaluacionEditando, numero_de_instancia: e.target.value})} />
+                                        <input type="date" value={evaluacionEditando.fecha ?? ""}
+                                            onChange={e => setEvaluacionEditando({...evaluacionEditando, fecha: e.target.value})} />
+                                        <input type="number" value={evaluacionEditando.nota ?? ""}
+                                            onChange={e => setEvaluacionEditando({...evaluacionEditando, nota: e.target.value})} />
+                                        <select value={evaluacionEditando.estado} onChange={e => setEvaluacionEditando({...evaluacionEditando, estado: e.target.value})}>
+                                            <option value="pendiente">Pendiente</option>
+                                            <option value="aprobado">Aprobado</option>
+                                            <option value="desaprobado">Desaprobado</option>
+                                        </select>
+                                        <button onClick={handleActualizarEvaluacion}>Guardar</button>
+                                        <button onClick={() => setEvaluacionEditando(null)}>Cancelar</button>
+                                    </>
+                                ) : (
+
+                                    <>
+                                        <p>{evaluacion.tipo} — {evaluacion.fecha} — {evaluacion.estado} {evaluacion.nota ? `| Nota: ${evaluacion.nota}` : ""}</p>
+                                        <button onClick={() => setEvaluacionEditando({...evaluacion})}>✏️</button>
+                                        <button onClick={() => handleEliminarEvaluacion(evaluacion.id)}>🗑</button>
+                                    </>
+                                )}
                             </div>
                         )) }
 
-                        <div>
-                            <select value={formEvaluacion.tipo} onChange={e => setFormEvaluacion({...formEvaluacion, tipo: e.target.value})}>
-                                <option value="parcial">Parcial</option>
-                                <option value="tp">TP</option>
-                                <option value="final">Final</option>
-                            </select>
-                            <input type="number" placeholder="Instancia" value={formEvaluacion.numero_de_instancia}
-                                onChange={e => setFormEvaluacion({...formEvaluacion, numero_de_instancia: e.target.value})} />
-                            <input type="date" value={formEvaluacion.fecha}
-                                onChange={e => setFormEvaluacion({...formEvaluacion, fecha: e.target.value})} />
-                            <input type="number" placeholder="Nota" value={formEvaluacion.nota}
-                                onChange={e => setFormEvaluacion({...formEvaluacion, nota: e.target.value})} />
-                            <select value={formEvaluacion.estado} onChange={e => setFormEvaluacion({...formEvaluacion, estado: e.target.value})}>
-                                <option value="pendiente">Pendiente</option>
-                                <option value="aprobado">Aprobado</option>
-                                <option value="desaprobado">Desaprobado</option>
-                            </select>
-                            <button onClick={handleEvaluacion}>Agregar evaluación</button>
-                        </div>
+                        {evaluacionEditando === null && (
+                            <div>
+                                <select value={formEvaluacion.tipo} onChange={e => setFormEvaluacion({...formEvaluacion, tipo: e.target.value})}>
+                                    <option value="parcial">Parcial</option>
+                                    <option value="tp">TP</option>
+                                    <option value="final">Final</option>
+                                </select>
+                                <input type="number" placeholder="Instancia" value={formEvaluacion.numero_de_instancia}
+                                    onChange={e => setFormEvaluacion({...formEvaluacion, numero_de_instancia: e.target.value})} />
+                                <input type="date" value={formEvaluacion.fecha}
+                                    onChange={e => setFormEvaluacion({...formEvaluacion, fecha: e.target.value})} />
+                                <input type="number" placeholder="Nota" value={formEvaluacion.nota}
+                                    onChange={e => setFormEvaluacion({...formEvaluacion, nota: e.target.value})} />
+                                <select value={formEvaluacion.estado} onChange={e => setFormEvaluacion({...formEvaluacion, estado: e.target.value})}>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="aprobado">Aprobado</option>
+                                    <option value="desaprobado">Desaprobado</option>
+                                </select>
+                                <button onClick={handleEvaluacion}>Agregar evaluación</button>
+                            </div>
+                        )}
+                       
                     </>
 
 

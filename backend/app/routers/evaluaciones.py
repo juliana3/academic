@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from ..database import get_session
 
 from ..models import Evaluacion, Materia
-from ..schemas import EvaluacionCreate, EvaluacionUpdate, EvaluacionConEstadoMateria 
+from ..schemas import EvaluacionCreate, EvaluacionUpdate, EvaluacionConEstadoMateria, EvaluacionRead
 
 from ..services.motor_estados import calcular_estado
 from ..enums import EstadoEvaluacion
@@ -69,7 +69,11 @@ def actualizar_evaluacion(evaluacion_id: int, evaluacion_data: EvaluacionUpdate,
     session.commit()
     session.refresh(materia)
 
-    return {"evaluacion" : evaluacion, "materia": materia, "alertas" : []}
+    return {
+    "evaluacion": EvaluacionRead.model_validate(evaluacion).model_dump(),
+    "materia": materia.model_dump(),
+    "alertas": []
+}
 
 
 
