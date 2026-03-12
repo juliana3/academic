@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion, actualizarEvaluacion } from "../api/evaluaciones";
-import { obtenerHorarios, crearHorario, eliminarHorario } from "../api/horarios";
+import { obtenerHorarios, crearHorario, eliminarHorario, actualizarHorario } from "../api/horarios";
 
 function MateriaDetalle(){
     const {materiaId} = useParams()
@@ -11,6 +11,8 @@ function MateriaDetalle(){
     const [horarios, setHorarios] = useState([])
     const [error, setError] = useState(null)
     const [evaluacionEditando, setEvaluacionEditando] = useState(null)
+    const [horarioEditando, setHorarioEditando] = useState(null)
+
 
     const [formEvaluacion, setFormEvaluacion] = useState({
         tipo: "parcial",
@@ -114,6 +116,17 @@ function MateriaDetalle(){
                 setEvaluacionEditando(null)
                 setError(null)
             }). catch(err => setError(err.response.data.detail))
+    }
+
+
+    const handleActualizarHorario = () => {
+    actualizarHorario(horarioEditando.id, horarioEditando)
+        .then(data => {
+            setHorarios(horarios.map(h => h.id === horarioEditando.id ? data.horario : h))
+            setHorarioEditando(null)
+            setError(null)
+        })
+        .catch(err => setError(err.response.data.detail))
     }
 
     useEffect(() => {
@@ -227,29 +240,55 @@ function MateriaDetalle(){
                         <h1>Horarios</h1>
                         {horarios.map(horario => (
                             <div key={horario.id}>
-                                <p>{horario.nombre ? `${horario.nombre} — ` : ""}{horario.dia_semana} {horario.hora_inicio} - {horario.hora_fin}</p>
-                                <button onClick={() => handleEliminarHorario(horario.id)}>🗑</button>
+                                {horarioEditando !== null && horarioEditando.id === horario.id ? (
+                                    <div>
+                                        <select value={horarioEditando.dia_semana} onChange={e => setHorarioEditando({...horarioEditando, dia_semana: e.target.value})}>
+                                            <option value="lunes">Lunes</option>
+                                            <option value="martes">Martes</option>
+                                            <option value="miercoles">Miércoles</option>
+                                            <option value="jueves">Jueves</option>
+                                            <option value="viernes">Viernes</option>
+                                            <option value="sabado">Sábado</option>
+                                        </select>
+                                        <input type="time" value={horarioEditando.hora_inicio ?? ""}
+                                            onChange={e => setHorarioEditando({...horarioEditando, hora_inicio: e.target.value})} />
+                                        <input type="time" value={horarioEditando.hora_fin ?? ""}
+                                            onChange={e => setHorarioEditando({...horarioEditando, hora_fin: e.target.value})} />
+                                        <input type="text" value={horarioEditando.nombre ?? ""}
+                                            onChange={e => setHorarioEditando({...horarioEditando, nombre: e.target.value})} />
+                                        <button onClick={handleActualizarHorario}>Guardar</button>
+                                        <button onClick={() => setHorarioEditando(null)}>Cancelar</button>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p>{horario.nombre ? `${horario.nombre} — ` : ""}{horario.dia_semana} {horario.hora_inicio} - {horario.hora_fin}</p>
+                                        <button onClick={() => setHorarioEditando({...horario})}>✏️</button>
+                                        <button onClick={() => handleEliminarHorario(horario.id)}>🗑</button>
+                                    </div>
+                                )}
                             </div>
                         ))}
 
-                        <div>
-                            <select value={formHorario.dia_semana} onChange={e => setFormHorario({...formHorario, dia_semana: e.target.value})}>
-                                <option value="lunes">Lunes</option>
-                                <option value="martes">Martes</option>
-                                <option value="miercoles">Miércoles</option>
-                                <option value="jueves">Jueves</option>
-                                <option value="viernes">Viernes</option>
-                                <option value="sabado">Sábado</option>
-                            </select>
-                            <input type="time" value={formHorario.hora_inicio}
-                                onChange={e => setFormHorario({...formHorario, hora_inicio: e.target.value})} />
-                            <input type="time" value={formHorario.hora_fin}
-                                onChange={e => setFormHorario({...formHorario, hora_fin: e.target.value})} />
-                            <input type="text" placeholder="Nombre (ej: Teoría, Práctica)"value={formHorario.nombre ?? ""}
-                                onChange={e => setFormHorario({...formHorario, nombre: e.target.value})} />
-                            <button onClick={handleCrearHorario}>Agregar horario</button>
-                        </div>
-
+                        {horarioEditando === null && (
+                            
+                            <div>
+                                <select value={formHorario.dia_semana} onChange={e => setFormHorario({...formHorario, dia_semana: e.target.value})}>
+                                    <option value="lunes">Lunes</option>
+                                    <option value="martes">Martes</option>
+                                    <option value="miercoles">Miércoles</option>
+                                    <option value="jueves">Jueves</option>
+                                    <option value="viernes">Viernes</option>
+                                    <option value="sabado">Sábado</option>
+                                </select>
+                                <input type="time" value={formHorario.hora_inicio}
+                                    onChange={e => setFormHorario({...formHorario, hora_inicio: e.target.value})} />
+                                <input type="time" value={formHorario.hora_fin}
+                                    onChange={e => setFormHorario({...formHorario, hora_fin: e.target.value})} />
+                                <input type="text" placeholder="Nombre (ej: Teoría, Práctica)"value={formHorario.nombre ?? ""}
+                                    onChange={e => setFormHorario({...formHorario, nombre: e.target.value})} />
+                                <button onClick={handleCrearHorario}>Agregar horario</button>
+                            </div>
+                            )}
                     </>
                 )}
 

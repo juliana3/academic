@@ -3,7 +3,7 @@ from sqlmodel import Session, col, select
 from ..database import get_session
 
 from ..models import Horario, Materia, Evento, Evaluacion, Plan
-from ..schemas.horario import HorarioCreate, HorarioUpdate
+from ..schemas.horario import HorarioCreate, HorarioUpdate, HorarioRead
 from ..enums import EstadoMateria
 
 from ..services.horarios import detectar_superposiciones
@@ -127,7 +127,15 @@ def actualizar_horario(horario_id : int, horario_data : HorarioUpdate, session: 
 
     superposiciones = detectar_superposiciones(horario, todos_los_horarios)
 
-    return {"horario": horario, "superposiciones": superposiciones}
+    #formateo de horario
+    horario_dict = HorarioRead.model_validate(horario).model_dump()
+    horario_dict["hora_inicio"] = str(horario_dict["hora_inicio"])[:5]
+    horario_dict["hora_fin"] = str(horario_dict["hora_fin"])[:5]
+
+    return {
+        "horario": horario_dict,
+        "superposiciones": superposiciones      
+    }
     
 
 
