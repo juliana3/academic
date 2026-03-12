@@ -82,11 +82,15 @@ def alertas_conflictos_horarios(todos_los_horarios, materias):
                     if materia_superpuesta is None:
                         continue
                     else:
+                        dia = h.dia_semana.value if hasattr(h.dia_semana, 'value') else h.dia_semana
+                        hora_inicio = str(h.hora_inicio)[:5]
+                        hora_fin = str(h.hora_fin)[:5]
+
                         alertas.append(AlertaRead(
                             tipo = TipoAlerta.conflicto_horario,
                             id_materia = h.id_materia,
                             nombre_materia = materia_superpuesta.nombre ,
-                            mensaje = f"El horario de {materia_superpuesta.nombre} el {h.dia_semana} de {h.hora_inicio} a {h.hora_fin} se superpone con otro horario.",
+                            mensaje = f"El horario de {materia_superpuesta.nombre} el {dia} de {hora_inicio} a {hora_fin} se superpone con otro horario.",
                             prioridad = 3,
                             fecha_referencia = None
                         ))

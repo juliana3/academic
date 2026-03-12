@@ -25,7 +25,9 @@ function Dashboard() {
     const [alertas, setAlertas] = useState([])
     const [datosCal, setDatosCal] = useState(null)
     const [formEvento, setFormEvento] = useState(null)
-    const [alertasDescartadas, setAlertasDescartadas] = useState([])
+    const [alertasDescartadas, setAlertasDescartadas] = useState(
+        () => JSON.parse(localStorage.getItem("alertasDescartadas") ?? "[]")
+    )
 
     useEffect(() => {
         obtenerPlanes().then(data => {
@@ -98,10 +100,12 @@ function Dashboard() {
     }
 
     const descartarAlerta = (index) => {
-        setAlertasDescartadas([...alertasDescartadas, index])
+        const nuevas = [...alertasDescartadas, alertasFiltradas[index].mensaje]
+        setAlertasDescartadas(nuevas)
+        localStorage.setItem("alertasDescartadas", JSON.stringify(nuevas))
     }
 
-    const alertasVisibles = alertasFiltradas.filter((_,i) => !alertasDescartadas.includes(i))
+    const alertasVisibles = alertasFiltradas.filter(a => !alertasDescartadas.includes(a.mensaje))
 
     return (
         <div>
