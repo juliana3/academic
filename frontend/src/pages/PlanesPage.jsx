@@ -4,6 +4,7 @@ import { PlanesContext } from "../store/planesStore"
 import { obtenerPlanes, crearPlan, eliminarPlan } from "../api/planes"
 import { importarMaterias, crearMateria } from "../api/materias"
 import ConfirmDialog from '../components/common/ConfirmDialog'
+import MateriaForm from "../components/materias/MateriaForm"
 import { Trash2 } from "lucide-react"
 
 
@@ -134,19 +135,13 @@ function PlanesPage(){
                             )}
 
                             {vistaActiva === "individual" && (
-                                <div>
-                                    <input type="text" placeholder="Nombre" value={formMateria.nombre}
-                                        onChange={e => setFormMateria({...formMateria, nombre: e.target.value})} />
-                                    <input type="number" placeholder="Año" value={formMateria.anio}
-                                        onChange={e => setFormMateria({...formMateria, anio: e.target.value})} />
-                                    <input type="number" placeholder="Cuatrimestre" value={formMateria.periodo}
-                                        onChange={e => setFormMateria({...formMateria, periodo: e.target.value})} />
-                                    <select value={formMateria.tipo} onChange={e => setFormMateria({...formMateria, tipo: e.target.value})}>
-                                        <option value="obligatoria">Obligatoria</option>
-                                        <option value="optativa">Optativa</option>
-                                        <option value="electiva">Electiva</option>
-                                    </select>
-                                    <button onClick={handleCrearMateria}>Agregar materia</button>
+                                <div style={{ padding: "16px", background: "var(--bg-surface-2)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                                    <MateriaForm
+                                        form={formMateria}
+                                        onChange={setFormMateria}
+                                        onSubmit={handleCrearMateria}
+                                        onCancelar={() => setVistaActiva(null)}
+                                    />
                                 </div>
                             )}
                         </div>
