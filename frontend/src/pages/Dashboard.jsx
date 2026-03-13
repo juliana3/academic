@@ -7,6 +7,8 @@ import interactionPlugin from "@fullcalendar/interaction"
 import { obtenerPlanes, obtenerProgreso } from "../api/planes"
 import { obtenerAlertasActivas } from "../api/alertas"
 import {obtenerCalendario, crearEvento} from "../api/calendario"
+import PlanCard from "../components/planes/PlanCard"
+import AlertaBadge from "../components/common/AlertaBadge"
 
 const DIAS = {
     lunes: 1, 
@@ -107,94 +109,107 @@ function Dashboard() {
 
     const alertasVisibles = alertasFiltradas.filter(a => !alertasDescartadas.includes(a.mensaje))
 
-    return (
-        <div>
-            {/* Progreso por plan */}
-            <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
-                {planes.map(plan => {
-                    const progreso = progresos[plan.id]
-                    return (
-                        <div key={plan.id} onClick={() => navigate(`/planes/${plan.id}`)}
-                            style={{ padding: "16px", border: "1px solid #ccc", borderRadius: "8px", cursor: "pointer" }}>
-                            <h3>{plan.nombre}</h3>
-                            {progreso && (
-                                <>
-                                    <p>{progreso.aprobadas} / {progreso.total} aprobadas</p>
-                                    <p>{progreso.cursando} cursando</p>
-                                    <div style={{ background: "#eee", borderRadius: "4px", height: "8px" }}>
-                                        <div style={{
-                                            background: "#417505",
-                                            width: `${(progreso.aprobadas / progreso.total) * 100}%`,
-                                            height: "8px",
-                                            borderRadius: "4px"
-                                        }} />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
+   return (
+        <div style={{ padding: "24px" }}>
 
-            {/* Calendario + Alertas */}
-            <div style={{ display: "flex", gap: "16px" }}>
-                <div style={{ flex: 1 }}>
-                    
-                    {formEvento && (
-                        
-                        <div style={{ padding: "10px", border: "1px solid #ccc", marginBottom: "10px", borderRadius: "8px" }}>
-                            <h3>Nuevo evento</h3>
-                            <input type="text" placeholder="Título"
-                                value={formEvento.titulo}
-                                onChange={e => setFormEvento({...formEvento, titulo: e.target.value})} />
-                            <p>Desde: {formatearFecha(formEvento.fecha_inicio)} — Hasta: {formatearFecha(formEvento.fecha_fin)}</p>
-                            <input type="color" value={formEvento.color}
-                                onChange={e => setFormEvento({...formEvento, color: e.target.value})} />
-                            <button onClick={handleGuardar}>Guardar</button>
-                            <button onClick={() => setFormEvento(null)}>Cancelar</button>
-                        </div>
-                    )}
-                    <FullCalendar
-                        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                        initialView="dayGridMonth"
-                        headerToolbar={{
-                            left: "prev,next today",
-                            center: "title",
-                            right: "dayGridMonth,timeGridWeek"
-                        }}
-                        locale="es"
-                        firstDay={1}
-                        selectable={true}
-                        select={handleSeleccion}
-                        events={eventosCalendario}
-                        height="600px"
-                        eventContent={(arg) => {
-                            const [materia, titulo] = arg.event.title.split(" - ")
-                            return (
-                                <div style={{ padding: "2px 4px" }}>
-                                    <div style={{ fontWeight: "bold", fontSize: "0.85em" }}>{materia}</div>
-                                    {titulo && <div style={{ fontWeight: "normal", fontSize: "0.75em", opacity: 0.85 }}>{titulo}</div>}
-                                </div>
-                            )
-                        }}
-                    />
+            {/* Fila superior: Planes + Alertas */}
+            <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+                
+                {/* Slot Planes */}
+                <div style={{
+                    flex: 1,
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    overflow: "hidden"
+                }}>
+                    <h2 style={{ marginBottom: "12px" }}>Mis planes</h2>
+                    <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px" }}>
+                        {planes.map(plan => (
+                            <PlanCard key={plan.id} plan={plan} progreso={progresos[plan.id]} />
+                        ))}
+                    </div>
                 </div>
 
-                {/* Alertas */}
-                <div style={{ width: "280px" }}>
-                    <h2>Alertas</h2>
-                    {alertasFiltradas.length === 0 && <p>Sin alertas</p>}
+                {/* Slot Alertas */}
+                <div style={{
+                    width: "280px",
+                    minWidth: "280px",
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    maxHeight: "250px",
+                    overflowY: "auto"
+                }}>
+                    <h2 style={{ marginBottom: "12px" }}>Alertas</h2>
+                    {alertasVisibles.length === 0 && (
+                        <p style={{ color: "var(--text-secondary)" }}>Sin alertas</p>
+                    )}
                     {alertasVisibles.map((alerta, i) => (
-                        <div key={i} style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "8px", marginBottom: "8px", position: "relative"}}>
-                            <button
-                                onClick={() => descartarAlerta(i)}
-                                style = {{position: "absolute", top: "8px", right: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1em"}}
-                            >✕</button>
-                            <b>{alerta.tipo}</b>
-                            <p>{alerta.mensaje}</p>
-                        </div>
+                        <AlertaBadge key={i} alerta={alerta} onDescartar={() => descartarAlerta(i)} />
                     ))}
                 </div>
+            </div>
+
+            {/* Calendario full ancho */}
+            {formEvento && (
+                <div style={{
+                    padding: "16px",
+                    background: "var(--bg-surface)",
+                    border: "1px solid var(--accent)",
+                    borderRadius: "12px",
+                    marginBottom: "16px"
+                }}>
+                    <h3>Nuevo evento</h3>
+                    <input type="text" placeholder="Título"
+                        value={formEvento.titulo}
+                        onChange={e => setFormEvento({...formEvento, titulo: e.target.value})}
+                        style={{ marginRight: "8px" }} />
+                    <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "8px 0" }}>
+                        Desde: {formatearFecha(formEvento.fecha_inicio)} — Hasta: {formatearFecha(formEvento.fecha_fin)}
+                    </p>
+                    <input type="color" value={formEvento.color}
+                        onChange={e => setFormEvento({...formEvento, color: e.target.value})}
+                        style={{ marginRight: "8px", width: "40px", padding: "2px" }} />
+                    <button onClick={handleGuardar}>Guardar</button>
+                    <button className="ghost" onClick={() => setFormEvento(null)} style={{ marginLeft: "8px" }}>Cancelar</button>
+                </div>
+            )}
+
+            <div style={{
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                padding: "16px"
+            }}>
+                <FullCalendar
+                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                    initialView="dayGridMonth"
+                    headerToolbar={{
+                        left: "prev,next today",
+                        center: "title",
+                        right: "dayGridMonth,timeGridWeek"
+                    }}
+                    locale="es"
+                    firstDay={1}
+                    selectable={true}
+                    select={handleSeleccion}
+                    events={eventosCalendario}
+                    height="600px"
+                    eventContent={(arg) => {
+                        const partes = arg.event.title.split(" - ")
+                        const materia = partes[0]
+                        const titulo = partes[1]
+                        return (
+                            <div style={{ padding: "2px 4px" }}>
+                                <div style={{ fontWeight: "bold", fontSize: "0.85em" }}>{materia}</div>
+                                {titulo && <div style={{ fontWeight: "normal", fontSize: "0.75em", opacity: 0.85 }}>{titulo}</div>}
+                            </div>
+                        )
+                    }}
+                />
             </div>
         </div>
     )

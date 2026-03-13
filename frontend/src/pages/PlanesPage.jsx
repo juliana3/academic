@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { PlanesContext } from "../store/planesStore"
 import { obtenerPlanes, crearPlan, eliminarPlan } from "../api/planes"
 import { importarMaterias, crearMateria } from "../api/materias"
+import ConfirmDialog from '../components/common/ConfirmDialog'
+import { Trash2 } from "lucide-react"
+
 
 function PlanesPage(){
     const navigate = useNavigate()
@@ -12,6 +15,7 @@ function PlanesPage(){
     const [exito, setExito] = useState(null)
     const [vistaActiva, setVistaActiva] = useState(null)
     const [mostrarFormPlan, setMostrarFormPlan] = useState(false)
+    const [confirmEliminar, setConfirmEliminar] = useState(null)
 
     const [formPlan, setFormPlan] = useState({
         nombre: "",
@@ -105,10 +109,12 @@ function PlanesPage(){
                             }}>
                                 + Agregar materias
                             </button>
-                            <button onClick={(e) => {
+                            <button className="ghost" onClick={(e) => {
                                 e.stopPropagation()
-                                handleEliminarPlan(plan.id)
-                            }}>🗑</button>
+                                setConfirmEliminar(plan.id)
+                            }}>
+                                <Trash2 size={14} />
+                            </button>
                         </div>
                     </div>
 
@@ -168,6 +174,18 @@ function PlanesPage(){
                     <button onClick={handleCrearPlan}>Crear plan</button>
                     <button onClick={() => setMostrarFormPlan(false)}>Cancelar</button>
                 </div>
+            )}
+
+
+            {confirmEliminar && (
+                <ConfirmDialog
+                    mensaje="¿Seguro que querés eliminar este plan? Se eliminarán todas las materias, evaluaciones y horarios asociados."
+                    onConfirmar={() => {
+                        handleEliminarPlan(confirmEliminar)
+                        setConfirmEliminar(null)
+                    }}
+                    onCancelar={() => setConfirmEliminar(null)}
+                />
             )}
         </div>
     )

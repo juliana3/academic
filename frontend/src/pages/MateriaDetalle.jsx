@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Pencil, Trash2 } from "lucide-react";
 import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion, actualizarEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios, crearHorario, eliminarHorario, actualizarHorario } from "../api/horarios";
+import EvaluacionForm from "../components/evaluaciones/EvaluacionForm";
+import HorarioForm from "../components/horarios/HorarioForm";
+import MateriaBadge from "../components/materias/MateriaBadge";
+import ConfirmDialog from "../components/common/ConfirmDialog";
 
 function MateriaDetalle(){
     const {materiaId} = useParams()
@@ -13,6 +18,7 @@ function MateriaDetalle(){
     const [evaluacionEditando, setEvaluacionEditando] = useState(null)
     const [horarioEditando, setHorarioEditando] = useState(null)
     const [formularioActivo, setFormularioActivo] = useState(null)
+    const [confirmEliminar, setConfirmEliminar] = useState(null)
 
     const [formEvaluacion, setFormEvaluacion] = useState({
         tipo: "parcial",
@@ -135,159 +141,206 @@ function MateriaDetalle(){
     if (!materia) return <p>Cargando...</p>
 
     return (
-        <div>
-            <h1>{materia.nombre}</h1>
-            <p>Estado: {materia.estado}</p>
-            <p>Año: {materia.anio} | Cuatrimestre: {materia.periodo}</p>
-            <p>Tipo: {materia.tipo}</p>
-            <p>Tipo de aprobación: {materia.tipo_aprobacion ?? "No configurado"}</p>
+        <div style={{ padding: "24px" }}>
 
-            {materia.estado === "aprobada" && (
-                <div>
-                    <p>✅ Materia aprobada</p>
-                    {materia.nota_final && <p>Nota final: {materia.nota_final}</p>}
-                    {materia.fecha_estado && <p>Fecha: {formatearFecha(materia.fecha_estado)}</p>}
+            {/* Header materia */}
+            <div style={{
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                padding: "20px",
+                marginBottom: "24px"
+            }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                    <h1 style={{ marginBottom: "0" }}>{materia.nombre}</h1>
+                    <MateriaBadge estado={materia.estado} />
+                </div>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+                    Año {materia.anio} · Cuatrimestre {materia.periodo} · {materia.tipo}
+                </p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "16px" }}>
+                    Tipo de aprobación: {materia.tipo_aprobacion ?? "No configurado"}
+                </p>
+
+                {materia.estado === "aprobada" && (
+                    <div style={{ marginBottom: "12px" }}>
+                        {materia.nota_final && <p style={{ color: "var(--text-secondary)" }}>Nota final: {materia.nota_final}</p>}
+                        {materia.fecha_estado && <p style={{ color: "var(--text-secondary)" }}>Fecha: {formatearFecha(materia.fecha_estado)}</p>}
+                    </div>
+                )}
+
+                {error && <p style={{ color: "var(--estado-libre)", marginBottom: "12px" }}>{error}</p>}
+
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {materia.estado === "sin_cursar" && (
+                        <button onClick={handleInscribir}>Inscribirse</button>
+                    )}
+                    {materia.estado === "libre" && (
+                        <button onClick={handleReinscribir}>Reinscribirse</button>
+                    )}
+                    {materia.estado !== "aprobada" && (
+                        <button onClick={handleAprobar} style={{ background: "var(--estado-aprobada)" }}>
+                            Marcar como aprobada
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {materia.estado !== "aprobada" && (
+                <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
+
+                    {/* Evaluaciones */}
+                    <div style={{
+                        flex: 1,
+                        background: "var(--bg-surface)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        minWidth: "300px"
+                    }}>
+                        <h2>Evaluaciones</h2>
+
+                        {evaluaciones.map(evaluacion => (
+                            <div key={evaluacion.id}>
+                                {evaluacionEditando !== null && evaluacionEditando.id === evaluacion.id ? (
+                                    <EvaluacionForm
+                                        form={evaluacionEditando}
+                                        onChange={setEvaluacionEditando}
+                                        onSubmit={handleActualizarEvaluacion}
+                                        onCancelar={() => setEvaluacionEditando(null)}
+                                        submitLabel="Guardar"
+                                    />
+                                ) : (
+                                    <div style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        padding: "10px 0",
+                                        borderBottom: "1px solid var(--border)"
+                                    }}>
+                                        <div>
+                                            <p style={{ color: "var(--text-primary)" }}>
+                                                {evaluacion.tipo} {evaluacion.numero_de_instancia ? `#${evaluacion.numero_de_instancia}` : ""}
+                                            </p>
+                                            <p style={{ color: "var(--text-secondary)", fontSize: "12px" }}>
+                                                {formatearFecha(evaluacion.fecha)} · {evaluacion.estado}
+                                                {evaluacion.nota ? ` · Nota: ${evaluacion.nota}` : ""}
+                                            </p>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "4px" }}>
+                                            <button className="ghost" onClick={() => setEvaluacionEditando({...evaluacion})}>
+                                                <Pencil size={14} />
+                                            </button>
+                                            <button className="ghost" onClick={() => setConfirmEliminar({ tipo: "evaluacion", id: evaluacion.id })}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {evaluacionEditando === null && (
+                            <>
+                                <button style={{ marginTop: "12px" }}
+                                    onClick={() => setFormularioActivo(formularioActivo === "evaluacion" ? null : "evaluacion")}>
+                                    + Agregar evaluación
+                                </button>
+                                {formularioActivo === "evaluacion" && (
+                                    <EvaluacionForm
+                                        form={formEvaluacion}
+                                        onChange={setFormEvaluacion}
+                                        onSubmit={handleEvaluacion}
+                                        onCancelar={() => setFormularioActivo(null)}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </div>
+
+                    {/* Horarios */}
+                    <div style={{
+                        flex: 1,
+                        background: "var(--bg-surface)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        minWidth: "300px"
+                    }}>
+                        <h2>Horarios</h2>
+
+                        {horarios.map(horario => (
+                            <div key={horario.id}>
+                                {horarioEditando !== null && horarioEditando.id === horario.id ? (
+                                    <HorarioForm
+                                        form={horarioEditando}
+                                        onChange={setHorarioEditando}
+                                        onSubmit={handleActualizarHorario}
+                                        onCancelar={() => setHorarioEditando(null)}
+                                        submitLabel="Guardar"
+                                    />
+                                ) : (
+                                    <div style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        padding: "10px 0",
+                                        borderBottom: "1px solid var(--border)"
+                                    }}>
+                                        <div>
+                                            <p style={{ color: "var(--text-primary)" }}>
+                                                {horario.nombre ? horario.nombre : horario.dia_semana}
+                                            </p>
+                                            <p style={{ color: "var(--text-secondary)", fontSize: "12px" }}>
+                                                {horario.nombre ? `${horario.dia_semana} · ` : ""}{horario.hora_inicio} - {horario.hora_fin}
+                                            </p>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "4px" }}>
+                                            <button className="ghost" onClick={() => setHorarioEditando({...horario})}>
+                                                <Pencil size={14} />
+                                            </button>
+                                            <button className="ghost" onClick={() => setConfirmEliminar({ tipo: "horario", id: horario.id })}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {horarioEditando === null && (
+                            <>
+                                <button style={{ marginTop: "12px" }}
+                                    onClick={() => setFormularioActivo(formularioActivo === "horario" ? null : "horario")}>
+                                    + Agregar horario
+                                </button>
+                                {formularioActivo === "horario" && (
+                                    <HorarioForm
+                                        form={formHorario}
+                                        onChange={setFormHorario}
+                                        onSubmit={handleCrearHorario}
+                                        onCancelar={() => setFormularioActivo(null)}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
 
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-            {materia.estado === "sin_cursar" && (
-                <button onClick={handleInscribir}>Inscribirse</button>
-            )}
-            {materia.estado === "libre" && (
-                <button onClick={handleReinscribir}>Reinscribirse</button>
-            )}
-            {materia.estado !== "aprobada" && (
-                <button onClick={handleAprobar}>Marcar como aprobada</button>
-            )}
-
-            {materia.estado !== "aprobada" && (
-                <>
-                    <h2>Evaluaciones</h2>
-                    {evaluaciones.map(evaluacion => (
-                        <div key={evaluacion.id}>
-                            {evaluacionEditando !== null && evaluacionEditando.id === evaluacion.id ? (
-                                <div>
-                                    <select value={evaluacionEditando.tipo ?? ""} onChange={e => setEvaluacionEditando({...evaluacionEditando, tipo: e.target.value})}>
-                                        <option value="parcial">Parcial</option>
-                                        <option value="tp">TP</option>
-                                        <option value="final">Final</option>
-                                    </select>
-                                    <input type="number" value={evaluacionEditando.numero_de_instancia ?? ""}
-                                        onChange={e => setEvaluacionEditando({...evaluacionEditando, numero_de_instancia: e.target.value})} />
-                                    <input type="date" value={evaluacionEditando.fecha ?? ""}
-                                        onChange={e => setEvaluacionEditando({...evaluacionEditando, fecha: e.target.value})} />
-                                    <input type="number" value={evaluacionEditando.nota ?? ""}
-                                        onChange={e => setEvaluacionEditando({...evaluacionEditando, nota: e.target.value})} />
-                                    <select value={evaluacionEditando.estado} onChange={e => setEvaluacionEditando({...evaluacionEditando, estado: e.target.value})}>
-                                        <option value="pendiente">Pendiente</option>
-                                        <option value="aprobado">Aprobado</option>
-                                        <option value="desaprobado">Desaprobado</option>
-                                    </select>
-                                    <button onClick={handleActualizarEvaluacion}>Guardar</button>
-                                    <button onClick={() => setEvaluacionEditando(null)}>Cancelar</button>
-                                </div>
-                            ) : (
-                                <div>
-                                    <p>{evaluacion.tipo} — {evaluacion.fecha} — {evaluacion.estado} {evaluacion.nota ? `| Nota: ${evaluacion.nota}` : ""}</p>
-                                    <button onClick={() => setEvaluacionEditando({...evaluacion})}>✏️</button>
-                                    <button onClick={() => handleEliminarEvaluacion(evaluacion.id)}>🗑</button>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-
-                    {evaluacionEditando === null && (
-                        <>
-                            <button onClick={() => setFormularioActivo(formularioActivo === "evaluacion" ? null : "evaluacion")}>
-                                + Agregar evaluación
-                            </button>
-                            {formularioActivo === "evaluacion" && (
-                                <div>
-                                    <select value={formEvaluacion.tipo} onChange={e => setFormEvaluacion({...formEvaluacion, tipo: e.target.value})}>
-                                        <option value="parcial">Parcial</option>
-                                        <option value="tp">TP</option>
-                                        <option value="final">Final</option>
-                                    </select>
-                                    <input type="number" placeholder="Instancia" value={formEvaluacion.numero_de_instancia}
-                                        onChange={e => setFormEvaluacion({...formEvaluacion, numero_de_instancia: e.target.value})} />
-                                    <input type="date" value={formEvaluacion.fecha}
-                                        onChange={e => setFormEvaluacion({...formEvaluacion, fecha: e.target.value})} />
-                                    <input type="number" placeholder="Nota" value={formEvaluacion.nota}
-                                        onChange={e => setFormEvaluacion({...formEvaluacion, nota: e.target.value})} />
-                                    <select value={formEvaluacion.estado} onChange={e => setFormEvaluacion({...formEvaluacion, estado: e.target.value})}>
-                                        <option value="pendiente">Pendiente</option>
-                                        <option value="aprobado">Aprobado</option>
-                                        <option value="desaprobado">Desaprobado</option>
-                                    </select>
-                                    <button onClick={handleEvaluacion}>Agregar</button>
-                                    <button onClick={() => setFormularioActivo(null)}>Cancelar</button>
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    <h2>Horarios</h2>
-                    {horarios.map(horario => (
-                        <div key={horario.id}>
-                            {horarioEditando !== null && horarioEditando.id === horario.id ? (
-                                <div>
-                                    <select value={horarioEditando.dia_semana} onChange={e => setHorarioEditando({...horarioEditando, dia_semana: e.target.value})}>
-                                        <option value="lunes">Lunes</option>
-                                        <option value="martes">Martes</option>
-                                        <option value="miercoles">Miércoles</option>
-                                        <option value="jueves">Jueves</option>
-                                        <option value="viernes">Viernes</option>
-                                        <option value="sabado">Sábado</option>
-                                    </select>
-                                    <input type="time" value={horarioEditando.hora_inicio ?? ""}
-                                        onChange={e => setHorarioEditando({...horarioEditando, hora_inicio: e.target.value})} />
-                                    <input type="time" value={horarioEditando.hora_fin ?? ""}
-                                        onChange={e => setHorarioEditando({...horarioEditando, hora_fin: e.target.value})} />
-                                    <input type="text" value={horarioEditando.nombre ?? ""}
-                                        onChange={e => setHorarioEditando({...horarioEditando, nombre: e.target.value})} />
-                                    <button onClick={handleActualizarHorario}>Guardar</button>
-                                    <button onClick={() => setHorarioEditando(null)}>Cancelar</button>
-                                </div>
-                            ) : (
-                                <div>
-                                    <p>{horario.nombre ? `${horario.nombre} — ` : ""}{horario.dia_semana} {horario.hora_inicio} - {horario.hora_fin}</p>
-                                    <button onClick={() => setHorarioEditando({...horario})}>✏️</button>
-                                    <button onClick={() => handleEliminarHorario(horario.id)}>🗑</button>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-
-                    {horarioEditando === null && (
-                        <>
-                            <button onClick={() => setFormularioActivo(formularioActivo === "horario" ? null : "horario")}>
-                                + Agregar horario
-                            </button>
-                            {formularioActivo === "horario" && (
-                                <div>
-                                    <select value={formHorario.dia_semana} onChange={e => setFormHorario({...formHorario, dia_semana: e.target.value})}>
-                                        <option value="lunes">Lunes</option>
-                                        <option value="martes">Martes</option>
-                                        <option value="miercoles">Miércoles</option>
-                                        <option value="jueves">Jueves</option>
-                                        <option value="viernes">Viernes</option>
-                                        <option value="sabado">Sábado</option>
-                                    </select>
-                                    <input type="time" value={formHorario.hora_inicio}
-                                        onChange={e => setFormHorario({...formHorario, hora_inicio: e.target.value})} />
-                                    <input type="time" value={formHorario.hora_fin}
-                                        onChange={e => setFormHorario({...formHorario, hora_fin: e.target.value})} />
-                                    <input type="text" placeholder="Nombre (ej: Teoría, Práctica)" value={formHorario.nombre ?? ""}
-                                        onChange={e => setFormHorario({...formHorario, nombre: e.target.value})} />
-                                    <button onClick={handleCrearHorario}>Agregar</button>
-                                    <button onClick={() => setFormularioActivo(null)}>Cancelar</button>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </>
+            {confirmEliminar && (
+                <ConfirmDialog
+                    mensaje={`¿Seguro que querés eliminar ${confirmEliminar.tipo === "evaluacion" ? "esta evaluación" : "este horario"}?`}
+                    onConfirmar={() => {
+                        if (confirmEliminar.tipo === "evaluacion") {
+                            handleEliminarEvaluacion(confirmEliminar.id)
+                        } else {
+                            handleEliminarHorario(confirmEliminar.id)
+                        }
+                        setConfirmEliminar(null)
+                    }}
+                    onCancelar={() => setConfirmEliminar(null)}
+                />
             )}
         </div>
     )

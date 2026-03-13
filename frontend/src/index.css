@@ -1,68 +1,143 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    --bg-primary: #1a1a2e;
+    --bg-surface: #16213e;
+    --bg-surface-2: #1f2b50;
+    --border: #2a2a4a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0b0;
+    --accent: #9b59b6;
+    --accent-secondary: #e91e8c;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    /* estados materias */
+    --estado-sin-cursar: #4a4a6a;
+    --estado-cursando: #f5f0e8;
+    --estado-regular: #f5a623;
+    --estado-promocionada: #00bcd4;
+    --estado-libre: #e53935;
+    --estado-aprobada: #43a047;
+    --estado-text-cursando: #1a1a2e;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 14px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: 16px; }
+h2 { font-size: 1.3rem; font-weight: 500; margin-bottom: 12px; }
+h3 { font-size: 1.1rem; font-weight: 500; margin-bottom: 8px; }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+    background-color: var(--accent);
+    color: white;
+    border: 1px solid rgba(155, 89, 182, 0.5);
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover {
+    opacity: 0.9;
+    box-shadow: 0 0 8px 2px rgba(155, 89, 182, 0.6), 0 0 20px 4px rgba(155, 89, 182, 0.3);
+    border-color: var(--accent);
+}
+
+button.ghost {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 4px;
+    color: var(--text-secondary);
+}
+
+button.ghost:hover {
+    box-shadow: none;
+    opacity: 0.7;
+    border-color: transparent;
+}
+
+input, select {
+    background-color: var(--bg-surface-2);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    outline: none;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent);
+}
+
+input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* FullCalendar overrides */
+.fc {
+    color: var(--text-primary);
+}
+
+.fc-theme-standard td, 
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid {
+    border-color: var(--border);
+}
+
+.fc .fc-daygrid-day-frame {
+    background: var(--bg-surface);
+}
+
+.fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
+    background: var(--bg-surface-2);
+}
+
+.fc-event {
+    border-radius: 6px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    margin-bottom: 2px !important;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.fc-event:hover {
+    box-shadow: 0 0 8px 2px currentColor, 0 0 20px 4px rgba(255,255,255,0.1) !important;
+    border-color: currentColor !important;
+    opacity: 0.95 !important;
+}
+
+.fc .fc-button {
+    background-color: var(--bg-surface-2) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+
+.fc .fc-button:hover {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.fc .fc-button-active {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.fc .fc-today-button {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.fc-col-header-cell {
+    background: var(--bg-surface-2) !important;
 }

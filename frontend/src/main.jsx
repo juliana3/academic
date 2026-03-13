@@ -4,6 +4,7 @@ import App from './App.jsx'
 import { PlanesProvider } from './store/planesStore.jsx'
 import { AlertasProvider } from './store/alertasStore.jsx'
 import { BrowserRouter } from 'react-router-dom'
+import './index.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
