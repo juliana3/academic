@@ -76,6 +76,16 @@ async function reinscribirMateria(materiaId){
 const aprobarMateria = (materiaId) =>
     api.post("/materias/"+materiaId+"/aprobar").then(res => res.data)
 
+
+const importarMaterias = (planId, archivo) => {
+    const formData = new FormData()
+    formData.append("archivo", archivo)
+    return api.post("/planes/" +planId+"/importar", formData,{
+        headers : { "Content-Type" : "multipart/form-data"}
+    }).then(res => res.data)
+}
+
+
 export {
     obtenerMaterias,
     crearMateria,
@@ -84,5 +94,6 @@ export {
     eliminarMateria,
     inscribirMateria,
     reinscribirMateria,
-    aprobarMateria
+    aprobarMateria,
+    importarMaterias
 }
