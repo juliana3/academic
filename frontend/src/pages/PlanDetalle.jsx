@@ -4,6 +4,8 @@ import { obtenerMaterias } from "../api/materias"
 import { obtenerRequisitosDelPlan } from "../api/planes"
 import GrillaCurricular from "../components/materias/GrillaCurricular"
 import MateriaBadge from "../components/materias/MateriaBadge"
+import { ArrowLeft } from "lucide-react"
+
 
 function PlanDetalle() {
     const { planId } = useParams()
@@ -18,7 +20,16 @@ function PlanDetalle() {
     }, [planId])
 
     return (
-        <div style={{ display: "flex", width: "100%", height: "100vh", marginLeft: "-24px", marginTop: "-24px" }}>
+        <div style={{ display: "flex", width: "100%", height: "calc(100vh)", marginLeft: "-24px", marginTop: "-24px", position: "relative" }}>
+            
+            {/* Botón volver */}
+            <div style={{ position: "absolute", top: "16px", left: "16px", zIndex: 10 }}>
+                <button className="ghost" onClick={() => navigate("/planes")}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-secondary)" }}>
+                    <ArrowLeft size={16} /> Planes
+                </button>
+            </div>
+
             <div style={{ flex: 1 }}>
                 <GrillaCurricular
                     materias={materias}

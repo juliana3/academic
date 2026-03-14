@@ -5,7 +5,7 @@ import { obtenerPlanes, crearPlan, eliminarPlan } from "../api/planes"
 import { importarMaterias, crearMateria } from "../api/materias"
 import ConfirmDialog from '../components/common/ConfirmDialog'
 import MateriaForm from "../components/materias/MateriaForm"
-import { Trash2 } from "lucide-react"
+import { Trash2, ArrowLeft } from "lucide-react"
 
 
 function PlanesPage(){
@@ -90,6 +90,10 @@ function PlanesPage(){
 
     return (
         <div>
+            <button className="ghost" onClick={() => navigate("/")}
+                style={{ marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-secondary)" }}>
+                <ArrowLeft size={16} /> Dashboard
+            </button>
             <h1>Planes</h1>
 
             {error && <p style={{ color: "red" }}>{error}</p>}

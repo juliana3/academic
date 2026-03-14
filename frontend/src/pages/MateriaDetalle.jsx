@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react"
 import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion, actualizarEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios, crearHorario, eliminarHorario, actualizarHorario } from "../api/horarios";
@@ -8,8 +9,10 @@ import EvaluacionForm from "../components/evaluaciones/EvaluacionForm";
 import HorarioForm from "../components/horarios/HorarioForm";
 import MateriaBadge from "../components/materias/MateriaBadge";
 import ConfirmDialog from "../components/common/ConfirmDialog";
+import Modal from "../components/common/Modal";
 
 function MateriaDetalle(){
+    const navigate = useNavigate()
     const {materiaId} = useParams()
     const [materia, setMateria] = useState(null)
     const [evaluaciones, setEvaluaciones] = useState([])
@@ -78,7 +81,7 @@ function MateriaDetalle(){
     const handleCrearHorario = () => {
         crearHorario(materiaId, formHorario)
             .then(data => {
-                setHorarios([...horarios, data])
+                setHorarios([...horarios, data.horario])
                 setFormularioActivo(null)
                 setError(null)
             })
@@ -141,8 +144,13 @@ function MateriaDetalle(){
     if (!materia) return <p>Cargando...</p>
 
     return (
+        
         <div style={{ padding: "24px" }}>
 
+            <button className="ghost" onClick={() => navigate(-1)} 
+                style={{ marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-secondary)" }}>
+                <ArrowLeft size={16} /> Volver
+            </button>
             {/* Header materia */}
             <div style={{
                 background: "var(--bg-surface)",
@@ -198,7 +206,14 @@ function MateriaDetalle(){
                         padding: "20px",
                         minWidth: "300px"
                     }}>
-                        <h2>Evaluaciones</h2>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                            <h2 style={{ margin: 0 }}>Evaluaciones</h2>
+                            {evaluacionEditando === null && (
+                                <button onClick={() => setFormularioActivo("evaluacion")}>
+                                    + Agregar
+                                </button>
+                            )}
+                        </div>
 
                         {evaluaciones.map(evaluacion => (
                             <div key={evaluacion.id}>
@@ -239,23 +254,6 @@ function MateriaDetalle(){
                                 )}
                             </div>
                         ))}
-
-                        {evaluacionEditando === null && (
-                            <>
-                                <button style={{ marginTop: "12px" }}
-                                    onClick={() => setFormularioActivo(formularioActivo === "evaluacion" ? null : "evaluacion")}>
-                                    + Agregar evaluación
-                                </button>
-                                {formularioActivo === "evaluacion" && (
-                                    <EvaluacionForm
-                                        form={formEvaluacion}
-                                        onChange={setFormEvaluacion}
-                                        onSubmit={handleEvaluacion}
-                                        onCancelar={() => setFormularioActivo(null)}
-                                    />
-                                )}
-                            </>
-                        )}
                     </div>
 
                     {/* Horarios */}
@@ -267,7 +265,14 @@ function MateriaDetalle(){
                         padding: "20px",
                         minWidth: "300px"
                     }}>
-                        <h2>Horarios</h2>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                            <h2 style={{ margin: 0 }}>Horarios</h2>
+                            {horarioEditando === null && (
+                                <button onClick={() => setFormularioActivo("horario")}>
+                                    + Agregar
+                                </button>
+                            )}
+                        </div>
 
                         {horarios.map(horario => (
                             <div key={horario.id}>
@@ -307,25 +312,32 @@ function MateriaDetalle(){
                                 )}
                             </div>
                         ))}
-
-                        {horarioEditando === null && (
-                            <>
-                                <button style={{ marginTop: "12px" }}
-                                    onClick={() => setFormularioActivo(formularioActivo === "horario" ? null : "horario")}>
-                                    + Agregar horario
-                                </button>
-                                {formularioActivo === "horario" && (
-                                    <HorarioForm
-                                        form={formHorario}
-                                        onChange={setFormHorario}
-                                        onSubmit={handleCrearHorario}
-                                        onCancelar={() => setFormularioActivo(null)}
-                                    />
-                                )}
-                            </>
-                        )}
                     </div>
                 </div>
+            )}
+
+            {/* Modal agregar evaluacion */}
+            {formularioActivo === "evaluacion" && (
+                <Modal titulo="Agregar evaluación" onCerrar={() => setFormularioActivo(null)}>
+                    <EvaluacionForm
+                        form={formEvaluacion}
+                        onChange={setFormEvaluacion}
+                        onSubmit={handleEvaluacion}
+                        onCancelar={() => setFormularioActivo(null)}
+                    />
+                </Modal>
+            )}
+
+            {/* Modal agregar horario */}
+            {formularioActivo === "horario" && (
+                <Modal titulo="Agregar horario" onCerrar={() => setFormularioActivo(null)}>
+                    <HorarioForm
+                        form={formHorario}
+                        onChange={setFormHorario}
+                        onSubmit={handleCrearHorario}
+                        onCancelar={() => setFormularioActivo(null)}
+                    />
+                </Modal>
             )}
 
             {confirmEliminar && (

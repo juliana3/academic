@@ -33,23 +33,43 @@ function Dashboard() {
 
     useEffect(() => {
         obtenerPlanes().then(data => {
-            const planes_activos = data.filter(p => p.esta_activo)
-            setPlanes(planes_activos)
-            planes_activos.forEach(plan => {
+            const activos = data.filter(p => p.esta_activo)
+            setPlanes(activos)
+            activos.forEach(plan => {
                 obtenerProgreso(plan.id).then(progreso => {
                     setProgresos(prev => ({ ...prev, [plan.id]: progreso }))
                 })
             })
         })
-        obtenerAlertasActivas().then(data => setAlertas(data.alertas ?? []))
-
-        obtenerCalendario().then( data => {
-            console.log("datos calendario: ", data)
-            setDatosCal(data)})
-        
+        obtenerAlertas().then(data => setAlertas(data.alertas ?? []))
+        obtenerCalendario().then(data => setDatosCal(data))
     }, [])
 
     const alertasFiltradas = (alertas ?? []).filter(a => a.tipo !== "bloqueada_correlativa")
+    const alertasVisibles = alertasFiltradas.filter(a => !alertasDescartadas.includes(a.mensaje))
+
+    const descartarAlerta = (index) => {
+        const nuevas = [...alertasDescartadas, alertasVisibles[index].mensaje]
+        setAlertasDescartadas(nuevas)
+        localStorage.setItem("alertasDescartadas", JSON.stringify(nuevas))
+    }
+
+    const colorAlerta = (tipo) => {
+        const colores = {
+            fecha_proxima: "var(--estado-regular)",
+            promocion_posible: "var(--estado-promocionada)",
+            conflicto_horario: "var(--estado-libre)",
+            promocion_perdida: "var(--estado-libre)",
+            regularidad_perdida: "var(--estado-libre)"
+        }
+        return colores[tipo] ?? "var(--accent)"
+    }
+
+    const formatearFecha = (fecha) => {
+        if (!fecha) return ""
+        const [anio, mes, dia] = fecha.split("-")
+        return `${dia}/${mes}/${anio}`
+    }
 
     const eventosCalendario = datosCal ? [
         ...datosCal.horarios.map(h => ({
@@ -58,7 +78,6 @@ function Dashboard() {
             daysOfWeek: [DIAS[h.dia_semana]],
             startTime: h.hora_inicio,
             endTime: h.hora_fin,
-            startRecur: "2020-01-01",
             backgroundColor: "#4a90d9",
             borderColor: "#4a90d9"
         })),
@@ -66,16 +85,16 @@ function Dashboard() {
             id: e.id,
             title: e.titulo,
             start: e.fecha,
-            backgroundColor: "#f5a623",
-            borderColor: "#f5a623"
+            backgroundColor: "var(--estado-regular)",
+            borderColor: "var(--estado-regular)"
         })),
-        ...datosCal.eventos.map(ev => ({
-            id: ev.id,
-            title: ev.titulo,
-            start: ev.fecha_inicio,
-            end: ev.fecha_fin,
-            backgroundColor: ev.color ?? "#7ed321",
-            borderColor: ev.color ?? "#7ed321"
+        ...datosCal.eventos.map(e => ({
+            id: e.id,
+            title: e.titulo,
+            start: e.fecha_inicio,
+            end: e.fecha_fin,
+            backgroundColor: e.color ?? "var(--estado-aprobada)",
+            borderColor: e.color ?? "var(--estado-aprobada)"
         }))
     ] : []
 
@@ -95,26 +114,12 @@ function Dashboard() {
         })
     }
 
-    const formatearFecha = (fecha) => {
-        if (!fecha) return ""
-        const [anio, mes, dia] = fecha.split("-")
-        return `${dia}/${mes}/${anio}`
-    }
-
-    const descartarAlerta = (index) => {
-        const nuevas = [...alertasDescartadas, alertasFiltradas[index].mensaje]
-        setAlertasDescartadas(nuevas)
-        localStorage.setItem("alertasDescartadas", JSON.stringify(nuevas))
-    }
-
-    const alertasVisibles = alertasFiltradas.filter(a => !alertasDescartadas.includes(a.mensaje))
-
-   return (
+    return (
         <div style={{ padding: "24px" }}>
 
             {/* Fila superior: Planes + Alertas */}
             <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
-                
+
                 {/* Slot Planes */}
                 <div style={{
                     flex: 1,
@@ -122,10 +127,15 @@ function Dashboard() {
                     border: "1px solid var(--border)",
                     borderRadius: "12px",
                     padding: "16px",
-                    overflow: "hidden"
+                    maxHeight: "250px",
+                    overflowY: "auto"
                 }}>
                     <h2 style={{ marginBottom: "12px" }}>Mis planes</h2>
-                    <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "8px" }}>
+                    <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: "10px"
+                    }}>
                         {planes.map(plan => (
                             <PlanCard key={plan.id} plan={plan} progreso={progresos[plan.id]} />
                         ))}
@@ -153,7 +163,7 @@ function Dashboard() {
                 </div>
             </div>
 
-            {/* Calendario full ancho */}
+            {/* Calendario */}
             {formEvento && (
                 <div style={{
                     padding: "16px",
@@ -166,15 +176,15 @@ function Dashboard() {
                     <input type="text" placeholder="Título"
                         value={formEvento.titulo}
                         onChange={e => setFormEvento({...formEvento, titulo: e.target.value})}
-                        style={{ marginRight: "8px" }} />
+                        style={{ marginRight: "8px", marginTop: "8px" }} />
                     <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "8px 0" }}>
                         Desde: {formatearFecha(formEvento.fecha_inicio)} — Hasta: {formatearFecha(formEvento.fecha_fin)}
                     </p>
                     <input type="color" value={formEvento.color}
                         onChange={e => setFormEvento({...formEvento, color: e.target.value})}
                         style={{ marginRight: "8px", width: "40px", padding: "2px" }} />
-                    <button onClick={handleGuardar}>Guardar</button>
-                    <button className="ghost" onClick={() => setFormEvento(null)} style={{ marginLeft: "8px" }}>Cancelar</button>
+                    <button onClick={handleGuardar} style={{ marginRight: "8px" }}>Guardar</button>
+                    <button className="ghost" onClick={() => setFormEvento(null)}>Cancelar</button>
                 </div>
             )}
 

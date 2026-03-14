@@ -23,6 +23,28 @@
     padding: 0;
     box-sizing: border-box;
 }
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
 
 body {
     background-color: var(--bg-primary);
@@ -140,4 +162,20 @@ input::placeholder {
 
 .fc-col-header-cell {
     background: var(--bg-surface-2) !important;
+}
+
+.planes-scroll::-webkit-scrollbar {
+    height: 3px;
+}
+
+.planes-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.planes-scroll::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+.nodo-header .react-flow__handle {
+    display: none;
 }

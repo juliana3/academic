@@ -29,6 +29,58 @@ function GrillaCurricular({ materias, requisitos, onNodoClick }) {
     const [nodoHover, setNodoHover] = useState(null)
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
+    // nodos de año
+    const anosUnicos = [...new Set(materias.map(m => m.anio))].sort()
+    const nodosAnio = anosUnicos.map(anio => {
+        const periodosDelAnio = [...new Set(materias.filter(m => m.anio === anio).map(m => m.periodo))].sort()
+        const xCentro = (periodosDelAnio[0] + periodosDelAnio[periodosDelAnio.length - 1]) / 2 * 350
+        return {
+            id: `anio-${anio}`,
+            className: "nodo-header",
+            position: { x: xCentro -10, y: anio * 600 - 120 },
+            data: { label: `${anio}° Año` },
+            style: {
+                background: "transparent",
+                border: "1px solid var(--accent)",
+                color: "var(--accent)",
+                borderRadius: "20px",
+                padding: "4px 16px",
+                fontSize: "13px",
+                fontWeight: "700",
+                pointerEvents: "none",
+                letterSpacing: "1px"
+            },
+            selectable: false,
+            draggable: false
+        }
+    })
+
+    // nodos de cuatrimestre
+    const nodosCuatri = materias.reduce((acc, m) => {
+        const key = `${m.anio}-${m.periodo}`
+        if (!acc.find(n => n.id === `cuatri-${key}`)) {
+            acc.push({
+                id: `cuatri-${key}`,
+                className: "nodo-header",
+                position: { x: m.periodo * 350 , y: m.anio * 600 - 60 },
+                data: { label: `${m.periodo === 1 ? "1er" : `${m.periodo}do`} Cuatrimestre` },
+                style: {
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--text-secondary)",
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    pointerEvents: "none",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase"
+                },
+                selectable: false,
+                draggable: false
+            })
+        }
+        return acc
+    }, [])
+
     const nodos = materias.map((materia) => {
         const materiasEnMismaPosicion = materias.filter(
             m => m.anio === materia.anio && m.periodo === materia.periodo
@@ -80,13 +132,19 @@ function GrillaCurricular({ materias, requisitos, onNodoClick }) {
         }
     })
 
+    const todosLosNodos = [...nodosAnio, ...nodosCuatri, ...nodos]
+
     return (
         <div style={{ width: "100%", height: "100vh" }}>
             <ReactFlow
-                nodes={nodos}
+                nodes={todosLosNodos}
                 edges={edges}
-                onNodeClick={(event, node) => onNodoClick && onNodoClick(node)}
+                onNodeClick={(event, node) => {
+                    if (node.id.startsWith("anio-") || node.id.startsWith("cuatri-")) return
+                    onNodoClick && onNodoClick(node)
+                }}
                 onNodeMouseEnter={(event, node) => {
+                    if (node.id.startsWith("anio-") || node.id.startsWith("cuatri-")) return
                     setNodoHover(node.id)
                     setTooltipPos({ x: event.clientX, y: event.clientY })
                 }}
@@ -104,6 +162,7 @@ function GrillaCurricular({ materias, requisitos, onNodoClick }) {
 
                 <Panel position="top-left">
                     <div style={{
+                        marginTop: "40px",
                         background: "var(--bg-surface)",
                         border: "1px solid var(--border)",
                         borderRadius: "8px",
@@ -135,7 +194,6 @@ function GrillaCurricular({ materias, requisitos, onNodoClick }) {
                 </Panel>
             </ReactFlow>
 
-            {/* Tooltip requisitos */}
             {nodoHover && (() => {
                 const requisitosDelNodo = requisitos.filter(r => String(r.id_materia) === nodoHover)
                 if (requisitosDelNodo.length === 0) return null
