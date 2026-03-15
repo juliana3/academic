@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import crear_db_y_tablas
 from .models import Plan, Materia, Evaluacion, Horario, Requisito, Evento
 from .routers import planes, materias, evaluaciones, horarios, requisitos, alertas, eventos, auth
+import os
 
 
 app = FastAPI()
@@ -12,10 +13,11 @@ app = FastAPI()
 def on_startup():
     crear_db_y_tablas()
 
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"]
 )
