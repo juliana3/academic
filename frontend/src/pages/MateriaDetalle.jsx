@@ -176,6 +176,15 @@ function MateriaDetalle(){
         return `${dia}/${mes}/${anio}`
     }
 
+    const formatearTipoAprobacion = (tipo) => {
+        const tipos = {
+            solo_final: "Solo final",
+            promocion: "Promoción directa",
+            promocion_con_final: "Promoción con final"
+        }
+        return tipos[tipo] ?? "No configurado"
+    }
+    
     useEffect(() => {
         obtenerMateria(materiaId).then(data => setMateria(data))
         obtenerEvaluaciones(materiaId).then(data => setEvaluaciones(data))
@@ -215,7 +224,7 @@ function MateriaDetalle(){
                     Año {materia.anio} · Cuatrimestre {materia.periodo} · {materia.tipo}
                 </p>
                 <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "16px" }}>
-                    Tipo de aprobación: {materia.tipo_aprobacion ?? "No configurado"}
+                    Tipo de aprobación: {formatearTipoAprobacion(materia.tipo_aprobacion)}
                 </p>
 
                 {materia.estado === "aprobada" && (

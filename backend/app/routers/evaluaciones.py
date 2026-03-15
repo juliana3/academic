@@ -13,7 +13,6 @@ router = APIRouter(tags=["evaluaciones"])
 @router.get("/materias/{materia_id}/evaluaciones")
 def listar_evaluaciones(materia_id: int, session: Session = Depends(get_session)):
     evaluaciones = session.exec(select(Evaluacion).where(Evaluacion.id_materia == materia_id)).all()
-
     return evaluaciones
 
 
@@ -23,58 +22,57 @@ def crear_evaluacion(materia_id: int, evaluacion_data: EvaluacionCreate, session
     if materia is None:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
 
-    evaluacion = Evaluacion(id_materia= materia_id, **evaluacion_data.model_dump())
-    evaluacion.id_materia = materia_id
-
+    evaluacion = Evaluacion(id_materia=materia_id, **evaluacion_data.model_dump())
     session.add(evaluacion)
     session.commit()
     session.refresh(evaluacion)
 
-    evaluaciones_no_pendientes = session.exec(select(Evaluacion).where(Evaluacion.id_materia == materia_id).where(Evaluacion.estado != EstadoEvaluacion.pendiente)).all()
+    todas_las_evaluaciones = session.exec(
+        select(Evaluacion).where(Evaluacion.id_materia == materia_id)
+    ).all()
 
-    #recalculo el estado
-    materia.estado = calcular_estado(materia, evaluaciones_no_pendientes)
+    
+    materia.estado = calcular_estado(materia, todas_las_evaluaciones)
 
     session.add(materia)
     session.commit()
     session.refresh(materia)
 
-    return {"evaluacion" :evaluacion, "materia" : materia, "alertas" : []} 
+    return {"evaluacion": evaluacion, "materia": materia, "alertas": []}
 
 
 @router.put("/evaluaciones/{evaluacion_id}")
 def actualizar_evaluacion(evaluacion_id: int, evaluacion_data: EvaluacionUpdate, session: Session = Depends(get_session)):
-    evaluacion =  session.get(Evaluacion, evaluacion_id)
+    evaluacion = session.get(Evaluacion, evaluacion_id)
     if evaluacion is None:
         raise HTTPException(status_code=404, detail="Evaluacion no encontrada")
-    
+
     materia = session.get(Materia, evaluacion.id_materia)
     if materia is None:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
 
-
-    data = evaluacion_data.model_dump(exclude_unset = True)
+    data = evaluacion_data.model_dump(exclude_unset=True)
     evaluacion.sqlmodel_update(data)
 
     session.add(evaluacion)
     session.commit()
     session.refresh(evaluacion)
 
-    evaluaciones_no_pendientes = session.exec(select(Evaluacion).where(Evaluacion.id_materia == evaluacion.id_materia).where(Evaluacion.estado != EstadoEvaluacion.pendiente)).all()
+    todas_las_evaluaciones = session.exec(
+        select(Evaluacion).where(Evaluacion.id_materia == evaluacion.id_materia)
+    ).all()
 
-    #recalculo estado
-    materia.estado = calcular_estado(materia, evaluaciones_no_pendientes) 
+    materia.estado = calcular_estado(materia, todas_las_evaluaciones)
 
     session.add(materia)
     session.commit()
     session.refresh(materia)
 
     return {
-    "evaluacion": EvaluacionRead.model_validate(evaluacion).model_dump(),
-    "materia": materia.model_dump(),
-    "alertas": []
-}
-
+        "evaluacion": EvaluacionRead.model_validate(evaluacion).model_dump(),
+        "materia": materia.model_dump(),
+        "alertas": []
+    }
 
 
 @router.delete("/evaluaciones/{evaluacion_id}")
@@ -82,17 +80,20 @@ def eliminar_evaluacion(evaluacion_id: int, session: Session = Depends(get_sessi
     evaluacion = session.get(Evaluacion, evaluacion_id)
     if evaluacion is None:
         raise HTTPException(status_code=404, detail="Evaluacion no encontrada")
-    
+
     materia = session.get(Materia, evaluacion.id_materia)
     if materia is None:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
-    
+
+    materia_id = evaluacion.id_materia
     session.delete(evaluacion)
     session.commit()
 
-    evaluaciones_no_pendientes = session.exec(select(Evaluacion).where(Evaluacion.id_materia == evaluacion.id_materia).where(Evaluacion.estado != EstadoEvaluacion.pendiente)).all()
+    todas_las_evaluaciones = session.exec(
+        select(Evaluacion).where(Evaluacion.id_materia == materia_id)
+    ).all()
 
-    materia.estado = calcular_estado(materia, evaluaciones_no_pendientes)
+    materia.estado = calcular_estado(materia, todas_las_evaluaciones)
 
     session.add(materia)
     session.commit()

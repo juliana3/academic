@@ -6,20 +6,20 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import { obtenerPlanes, obtenerProgreso } from "../api/planes"
 import { obtenerAlertasActivas } from "../api/alertas"
-import {obtenerCalendario, crearEvento} from "../api/calendario"
+import { obtenerCalendario, crearEvento } from "../api/calendario"
 import PlanCard from "../components/planes/PlanCard"
 import AlertaBadge from "../components/common/AlertaBadge"
+import Modal from "../components/common/Modal"
 import Spinner from "../components/common/Spinner"
 
 const DIAS = {
-    lunes: 1, 
-    martes: 2, 
-    miercoles: 3, 
-    jueves: 4, 
-    viernes: 5, 
-    sabado: 6 
+    lunes: 1,
+    martes: 2,
+    miercoles: 3,
+    jueves: 4,
+    viernes: 5,
+    sabado: 6
 }
-
 
 function Dashboard() {
     const navigate = useNavigate()
@@ -40,14 +40,13 @@ function Dashboard() {
                 setPlanes(activos)
                 return Promise.all(activos.map(plan =>
                     obtenerProgreso(plan.id).then(progreso =>
-                        setProgresos(prev => ({ ...prev, [plan.id]: progreso}))
+                        setProgresos(prev => ({ ...prev, [plan.id]: progreso }))
                     )
                 ))
             }),
             obtenerAlertasActivas().then(data => setAlertas(data.alertas ?? [])),
             obtenerCalendario().then(data => setDatosCal(data))
         ]).then(() => setCargando(false))
-        
     }, [])
 
     const alertasFiltradas = (alertas ?? []).filter(a => a.tipo !== "bloqueada_correlativa")
@@ -124,6 +123,7 @@ function Dashboard() {
             <Spinner size={120} />
         </div>
     )
+
     return (
         <div style={{ padding: "24px" }}>
 
@@ -173,31 +173,31 @@ function Dashboard() {
                 </div>
             </div>
 
-            {/* Calendario */}
+            {/* Modal nuevo evento */}
             {formEvento && (
-                <div style={{
-                    padding: "16px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--accent)",
-                    borderRadius: "12px",
-                    marginBottom: "16px"
-                }}>
-                    <h3>Nuevo evento</h3>
-                    <input type="text" placeholder="Título"
-                        value={formEvento.titulo}
-                        onChange={e => setFormEvento({...formEvento, titulo: e.target.value})}
-                        style={{ marginRight: "8px", marginTop: "8px" }} />
-                    <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "8px 0" }}>
-                        Desde: {formatearFecha(formEvento.fecha_inicio)} — Hasta: {formatearFecha(formEvento.fecha_fin)}
-                    </p>
-                    <input type="color" value={formEvento.color}
-                        onChange={e => setFormEvento({...formEvento, color: e.target.value})}
-                        style={{ marginRight: "8px", width: "40px", padding: "2px" }} />
-                    <button onClick={handleGuardar} style={{ marginRight: "8px" }}>Guardar</button>
-                    <button className="ghost" onClick={() => setFormEvento(null)}>Cancelar</button>
-                </div>
+                <Modal titulo="Nuevo evento" onCerrar={() => setFormEvento(null)}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <input type="text" placeholder="Título" style={{ width: "100%" }}
+                            value={formEvento.titulo}
+                            onChange={e => setFormEvento({...formEvento, titulo: e.target.value})} />
+                        <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+                            Desde: {formatearFecha(formEvento.fecha_inicio)} — Hasta: {formatearFecha(formEvento.fecha_fin)}
+                        </p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <label style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Color:</label>
+                            <input type="color" value={formEvento.color}
+                                onChange={e => setFormEvento({...formEvento, color: e.target.value})}
+                                style={{ width: "40px", padding: "2px" }} />
+                        </div>
+                        <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                            <button onClick={handleGuardar}>Guardar</button>
+                            <button className="ghost" onClick={() => setFormEvento(null)}>Cancelar</button>
+                        </div>
+                    </div>
+                </Modal>
             )}
 
+            {/* Calendario */}
             <div style={{
                 background: "var(--bg-surface)",
                 border: "1px solid var(--border)",
@@ -219,13 +219,13 @@ function Dashboard() {
                     events={eventosCalendario}
                     height="600px"
                     eventContent={(arg) => {
-                        const partes = arg.event.title.split(" - ")
-                        const materia = partes[0]
-                        const titulo = partes[1]
+                        const partes = arg.event.title.split(" · ")
+                        const principal = partes[0]
+                        const secundario = partes[1]
                         return (
                             <div style={{ padding: "2px 4px" }}>
-                                <div style={{ fontWeight: "bold", fontSize: "0.85em" }}>{materia}</div>
-                                {titulo && <div style={{ fontWeight: "normal", fontSize: "0.75em", opacity: 0.85 }}>{titulo}</div>}
+                                <div style={{ fontWeight: "bold", fontSize: "0.85em" }}>{principal}</div>
+                                {secundario && <div style={{ fontWeight: "normal", fontSize: "0.75em", opacity: 0.85 }}>{secundario}</div>}
                             </div>
                         )
                     }}
@@ -234,7 +234,5 @@ function Dashboard() {
         </div>
     )
 }
-
-
 
 export default Dashboard

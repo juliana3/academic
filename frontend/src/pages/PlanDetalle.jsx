@@ -16,6 +16,15 @@ function PlanDetalle() {
     const [materiaSeleccionada, setMateriaSeleccionada] = useState(null)
     const [cargando, setCargando] = useState(true)
 
+    const formatearTipoAprobacion = (tipo) => {
+        const tipos = {
+            solo_final: "Solo final",
+            promocion: "Promoción directa",
+            promocion_con_final: "Promoción con final"
+        }
+        return tipos[tipo] ?? "No configurado"
+    }
+
     useEffect(() => {
         Promise.all([
             obtenerMaterias(planId).then(setMaterias),
@@ -84,7 +93,7 @@ function PlanDetalle() {
                         {materiaSeleccionada.tipo}
                     </p>
                     <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
-                        Tipo de aprobación: {materiaSeleccionada.tipo_aprobacion ?? "No configurado"}
+                        Tipo de aprobación: {formatearTipoAprobacion(materiaSeleccionada.tipo_aprobacion)}
                     </p>
                     <button onClick={() => navigate(`/materias/${materiaSeleccionada.id}`)}>
                         Ver detalle →

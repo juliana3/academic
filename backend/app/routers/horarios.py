@@ -41,10 +41,17 @@ def crear_horario(materia_id : int, horario_data : HorarioCreate, session : Sess
 def calendario(session: Session = Depends(get_session)):
     
     # materias cursando
-    materias_cursando = session.exec(
-        select(Materia).where(Materia.estado == EstadoMateria.cursando)
+    materias_activas = session.exec(
+        select(Materia).where(
+            col(Materia.estado).in_([
+                EstadoMateria.cursando,
+                EstadoMateria.regular,
+                EstadoMateria.promocionada,
+                EstadoMateria.libre
+            ])
+        )
     ).all()
-    ids_materias = [m.id for m in materias_cursando]
+    ids_materias = [m.id for m in materias_activas]
 
     # horarios
     horarios = session.exec(
@@ -54,7 +61,7 @@ def calendario(session: Session = Depends(get_session)):
     horarios_data = []
 
     for h in horarios:
-        materia = next(m for m in materias_cursando if m.id == h.id_materia)
+        materia = next(m for m in materias_activas if m.id == h.id_materia)
         plan = session.get(Plan, materia.id_plan)
         nombre_plan = plan.nombre if plan else ""
 
@@ -82,10 +89,10 @@ def calendario(session: Session = Depends(get_session)):
     for e in evaluaciones:
         if e.fecha is None:
             continue
-        materia = next(m for m in materias_cursando if m.id == e.id_materia)
+        materia = next(m for m in materias_activas if m.id == e.id_materia)
         eventos_evaluaciones.append({
             "id": f"eval-{e.id}",
-            "titulo": f"{e.tipo} - {materia.nombre}",
+            "titulo": f"{materia.nombre} · {e.tipo.value} {e.numero_de_instancia or ''}".strip(),
             "fecha": str(e.fecha),
             "materia_id": materia.id
         })

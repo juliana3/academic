@@ -26,7 +26,10 @@ def cumple_regularidad(materia, evaluaciones):
     if materia.nota_minima_parcial_regular is None:
         return False
     
-    parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial]
+    parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial and e.estado != EstadoEvaluacion.pendiente]
+
+    if not parciales:
+        return True
 
     tps_aprobados = [e for e in evaluaciones if e.tipo == TipoEvaluacion.tp and e.estado == EstadoEvaluacion.aprobado]
 
@@ -42,18 +45,23 @@ def cumple_regularidad(materia, evaluaciones):
 
 
 def cumple_promocion(materia, evaluaciones):
-    #recibe la mateeria y la lista limpia de parciales. Devuelve true o false
+     #recibe la mateeria y la lista limpia de parciales. Devuelve true o false
     #promocion: cada parcial debe tener nota mayor o igual a nota minima de promocions y promedio debe ser mayor o igual a promedio minimo de promocion
     if materia.nota_minima_parcial_promocion is None:
         return False
     
-    parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial]
     if materia.tipo_aprobacion == TipoAprobacion.solo_final:
         return False
     
-    promedio_parciales = sum(p.nota for p in parciales)/ len(parciales) if parciales else 0
+    parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial 
+                 and e.estado != EstadoEvaluacion.pendiente] 
+    
+    if not parciales:
+        return False
+    
+    promedio_parciales = sum(p.nota for p in parciales) / len(parciales)
 
-    return(
+    return (
         all(p.nota >= materia.nota_minima_parcial_promocion for p in parciales) 
         and promedio_parciales >= materia.promedio_minimo_parciales_promocion
     )
@@ -61,7 +69,9 @@ def cumple_promocion(materia, evaluaciones):
 
 
 def calcular_estado(materia, evaluaciones):
+
     #recibe materia y evaluaciones y devuelve el estado de la materia
+
     evaluaciones_limpias = resolver_recuperatorios(evaluaciones)
 
     final = [e for e in evaluaciones_limpias if e.tipo == TipoEvaluacion.final]
@@ -91,6 +101,9 @@ def calcular_estado(materia, evaluaciones):
             return EstadoMateria.aprobada
         elif materia.tipo_aprobacion == TipoAprobacion.promocion_con_final:
             return EstadoMateria.promocionada
+        
+
+
         
     return EstadoMateria.regular
         
