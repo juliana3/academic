@@ -1,5 +1,5 @@
 from .plan import PlanBase, PlanCreate, PlanUpdate
-from .materia import MateriaBase, MateriaCreate, MateriaUpdate, MateriaRead
+from .materia import MateriaBase, MateriaCreate, MateriaUpdate, MateriaRead, AprobarMateria
 from .evaluacion import EvaluacionBase, EvaluacionCreate, EvaluacionUpdate, EvaluacionRead, EvaluacionConEstadoMateria
 from .horario import HorarioBase, HorarioCreate, HorarioUpdate, HorarioRead
 from .requisito import RequisitoBase, RequisitoCreate, RequisitoRead

@@ -41,3 +41,7 @@ class MateriaUpdate(SQLModel):
     nota_final: float | None = None
     fecha_estado: date | None = None
     fecha_inicio_cursada: date | None = None
+
+
+class AprobarMateria(SQLModel):
+    nota_final: float | None = None

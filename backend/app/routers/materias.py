@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from ..database import get_session
 
 from ..models import Materia, Requisito, Evaluacion
-from ..schemas import MateriaCreate, MateriaUpdate
+from ..schemas import MateriaCreate, MateriaUpdate, AprobarMateria
 
 from ..enums import CondicionRequisito, EstadoMateria, ParaRequisito
 from ..services.correlatividades import esta_habilitada_para_cursar
@@ -243,7 +243,7 @@ def importar_materias(plan_id : int, archivo : UploadFile = File (...), session 
 
 
 @router.post("/materias/{materia_id}/aprobar")
-def aprobar_materia(materia_id: int, session: Session = Depends(get_session)):
+def aprobar_materia(materia_id: int, datos: AprobarMateria = AprobarMateria(), session: Session = Depends(get_session)):
     materia = session.get(Materia, materia_id)
     if materia is None:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
@@ -253,6 +253,7 @@ def aprobar_materia(materia_id: int, session: Session = Depends(get_session)):
     
     materia.estado = EstadoMateria.aprobada
     materia.fecha_estado = date.today()
+    materia.nota_final = datos.nota_final
 
     session.add(materia)
     session.commit()
