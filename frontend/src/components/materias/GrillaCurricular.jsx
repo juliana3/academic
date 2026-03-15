@@ -149,9 +149,16 @@ function GrillaCurricular({ materias, requisitos, onNodoClick }) {
                     setTooltipPos({ x: event.clientX, y: event.clientY })
                 }}
                 onNodeMouseLeave={() => setNodoHover(null)}
-                defaultViewport={{ x: 50, y: 50, zoom: 1 }}
-                minZoom={0.3}
-                maxZoom={2}
+                zoomOnScroll={false}
+                panOnScroll={true}
+                panOnScrollMode="vertical"
+                defaultViewport={{x: -50, y:-350, zoom:1.1}}
+                zoomOnDoubleClick={false}
+                translateExtent={[
+                    [0,350],
+                    [Infinity,Infinity]
+                ]}
+                
             >
                 <Background
                     variant={BackgroundVariant.Lines}
@@ -162,7 +169,7 @@ function GrillaCurricular({ materias, requisitos, onNodoClick }) {
 
                 <Panel position="top-left">
                     <div style={{
-                        marginTop: "40px",
+                        marginTop: "120px",
                         background: "var(--bg-surface)",
                         border: "1px solid var(--border)",
                         borderRadius: "8px",

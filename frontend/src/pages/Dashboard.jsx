@@ -9,6 +9,7 @@ import { obtenerAlertasActivas } from "../api/alertas"
 import {obtenerCalendario, crearEvento} from "../api/calendario"
 import PlanCard from "../components/planes/PlanCard"
 import AlertaBadge from "../components/common/AlertaBadge"
+import Spinner from "../components/common/Spinner"
 
 const DIAS = {
     lunes: 1, 
@@ -30,19 +31,23 @@ function Dashboard() {
     const [alertasDescartadas, setAlertasDescartadas] = useState(
         () => JSON.parse(localStorage.getItem("alertasDescartadas") ?? "[]")
     )
+    const [cargando, setCargando] = useState(true)
 
     useEffect(() => {
-        obtenerPlanes().then(data => {
-            const activos = data.filter(p => p.esta_activo)
-            setPlanes(activos)
-            activos.forEach(plan => {
-                obtenerProgreso(plan.id).then(progreso => {
-                    setProgresos(prev => ({ ...prev, [plan.id]: progreso }))
-                })
-            })
-        })
-        obtenerAlertas().then(data => setAlertas(data.alertas ?? []))
-        obtenerCalendario().then(data => setDatosCal(data))
+        Promise.all([
+            obtenerPlanes().then(data => {
+                const activos = data.filter(p => p.esta_activo)
+                setPlanes(activos)
+                return Promise.all(activos.map(plan =>
+                    obtenerProgreso(plan.id).then(progreso =>
+                        setProgresos(prev => ({ ...prev, [plan.id]: progreso}))
+                    )
+                ))
+            }),
+            obtenerAlertasActivas().then(data => setAlertas(data.alertas ?? [])),
+            obtenerCalendario().then(data => setDatosCal(data))
+        ]).then(() => setCargando(false))
+        
     }, [])
 
     const alertasFiltradas = (alertas ?? []).filter(a => a.tipo !== "bloqueada_correlativa")
@@ -114,6 +119,11 @@ function Dashboard() {
         })
     }
 
+    if (cargando) return (
+        <div style={{ width: "100%", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Spinner size={120} />
+        </div>
+    )
     return (
         <div style={{ padding: "24px" }}>
 

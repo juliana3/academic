@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, BookOpen, ChevronLeft, ChevronRight } from "lucide-react"
+import Logo  from "../assets/correlax_icon.svg?react"
 
 const links = [
     { path: "/", label: "Dashboard", icon: <LayoutDashboard size={18}/> },
@@ -24,11 +25,12 @@ function Sidebar({ colapsado, setColapsado }) {
             top: 0,
             backgroundColor: "var(--bg-surface)",
             zIndex: 100,
-            transition: "width 0.2s ease"
+            transition: "width 0.2s ease",
+            height : "100%"
         }}>
             <div style={{ padding: "0 16px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                {!colapsado && <h2 style={{ color: "var(--accent)", letterSpacing: "1px", fontSize: "1rem" }}>Académico</h2>}
-                <button onClick={() => setColapsado(!colapsado)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", padding: "4px" }}>
+                {!colapsado && <h2 style={{ color: "var(--accent)", letterSpacing: "1px", fontSize: "1rem", margin: "0 auto" }}>CORRELAX</h2>}
+                <button onClick={() => setColapsado(!colapsado)} className="ghost" style={{ color: "var(--text-secondary)", padding: "4px" }}>
                     {colapsado ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                 </button>
             </div>
@@ -53,6 +55,16 @@ function Sidebar({ colapsado, setColapsado }) {
                     {!colapsado && <span>{link.label}</span>}
                 </div>
             ))}
+
+            <div style={{
+                marginTop: "auto",
+                marginBottom: "-40px",
+                padding: "16px 0",
+                display: "flex",
+                justifyContent: "center"
+            }}>
+                <Logo width={colapsado ? 60 : 150} height={colapsado ? 60 : 150} />
+            </div>
         </div>
     )
 }
