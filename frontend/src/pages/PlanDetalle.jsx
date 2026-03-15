@@ -32,7 +32,7 @@ function PlanDetalle() {
     }, [])
 
     if(cargando) return (
-        <div style={{ width: "100%", height: "100vh", display: "flex", alignItems:      "center", justifyContent: "center" }}>
+        <div style={{ width: "100%", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", marginLeft: "-24px", marginTop: "-24px", position:"relative" }}>
             <Spinner size={120} />
         </div>
     )
@@ -62,6 +62,9 @@ function PlanDetalle() {
                 <div style={{
                     width: "300px",
                     padding: "20px",
+                    paddingTop: "80px",
+                    paddingLeft: "-20px",
+                    marginRight: "-50px",
                     borderLeft: "1px solid var(--border)",
                     background: "var(--bg-surface)",
                     overflowY: "auto",

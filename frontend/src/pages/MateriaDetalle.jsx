@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Pencil, Trash2, ArrowLeft } from "lucide-react";
-import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
+import { Pencil, Trash2, ArrowLeft, Settings } from "lucide-react";
+import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria, actualizarMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion, actualizarEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios, crearHorario, eliminarHorario, actualizarHorario } from "../api/horarios";
 import EvaluacionForm from "../components/evaluaciones/EvaluacionForm";
 import HorarioForm from "../components/horarios/HorarioForm";
 import MateriaBadge from "../components/materias/MateriaBadge";
+import MateriaConfigForm from "../components/materias/MateriaConfigForm";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import Modal from "../components/common/Modal";
 
@@ -23,6 +24,8 @@ function MateriaDetalle(){
     const [confirmEliminar, setConfirmEliminar] = useState(null)
     const [modalAprobar, setModalAprobar] = useState(false)
     const [notaFinal, setNotaFinal] = useState("")
+    const [modalEditar, setModalEditar] = useState(false)
+    const [formEditar, setFormEditar] = useState(null)
 
     const [formEvaluacion, setFormEvaluacion] = useState({
         tipo: "parcial",
@@ -61,6 +64,40 @@ function MateriaDetalle(){
                 setNotaFinal("")
                 setError(null)
             }).catch(err => setError(err.response.data.detail))
+    }
+
+    const handleAbrirEditar = () => {
+        setFormEditar({
+            tipo: materia.tipo,
+            tipo_aprobacion: materia.tipo_aprobacion ?? "",
+            nota_minima_parcial_regular: materia.nota_minima_parcial_regular ?? "",
+            promedio_minimo_parciales_regular: materia.promedio_minimo_parciales_regular ?? "",
+            nota_minima_parcial_promocion: materia.nota_minima_parcial_promocion ?? "",
+            promedio_minimo_parciales_promocion: materia.promedio_minimo_parciales_promocion ?? "",
+            cantidad_minima_tp_aprobados: materia.cantidad_minima_tp_aprobados ?? "",
+            nota_minima_final: materia.nota_minima_final ?? ""
+        })
+        setModalEditar(true)
+    }
+
+    const handleGuardarEditar = () => {
+        const datos = {
+            ...formEditar,
+            nota_minima_parcial_regular: formEditar.nota_minima_parcial_regular === "" ? null : parseFloat(formEditar.nota_minima_parcial_regular),
+            promedio_minimo_parciales_regular: formEditar.promedio_minimo_parciales_regular === "" ? null : parseFloat(formEditar.promedio_minimo_parciales_regular),
+            nota_minima_parcial_promocion: formEditar.nota_minima_parcial_promocion === "" ? null : parseFloat(formEditar.nota_minima_parcial_promocion),
+            promedio_minimo_parciales_promocion: formEditar.promedio_minimo_parciales_promocion === "" ? null : parseFloat(formEditar.promedio_minimo_parciales_promocion),
+            cantidad_minima_tp_aprobados: formEditar.cantidad_minima_tp_aprobados === "" ? null : parseInt(formEditar.cantidad_minima_tp_aprobados),
+            nota_minima_final: formEditar.nota_minima_final === "" ? null : parseFloat(formEditar.nota_minima_final),
+            tipo_aprobacion: formEditar.tipo_aprobacion === "" ? null : formEditar.tipo_aprobacion
+        }
+        actualizarMateria(materiaId, datos)
+            .then(data => {
+                setMateria(data)
+                setModalEditar(false)
+                setError(null)
+            })
+            .catch(err => setError(err.response.data.detail))
     }
 
     const handleEvaluacion = () => {
@@ -165,7 +202,14 @@ function MateriaDetalle(){
             }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                     <h1 style={{ marginBottom: "0" }}>{materia.nombre}</h1>
-                    <MateriaBadge estado={materia.estado} />
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <MateriaBadge estado={materia.estado} />
+                        {materia.estado !== "aprobada" && materia.estado !== "sin_cursar" && (
+                            <button className="ghost" onClick={handleAbrirEditar} style={{ color: "var(--text-secondary)" }}>
+                                <Settings size={16} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
                     Año {materia.anio} · Cuatrimestre {materia.periodo} · {materia.tipo}
@@ -198,7 +242,7 @@ function MateriaDetalle(){
                 </div>
             </div>
 
-            {materia.estado !== "aprobada" && (
+            {["cursando", "regular", "promocionada", "libre"].includes(materia.estado) && (
                 <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
 
                     {/* Evaluaciones */}
@@ -314,6 +358,18 @@ function MateriaDetalle(){
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* Modal configurar materia */}
+            {modalEditar && formEditar && (
+                <Modal titulo="Configurar materia" onCerrar={() => setModalEditar(false)}>
+                    <MateriaConfigForm
+                        form={formEditar}
+                        onChange={setFormEditar}
+                        onSubmit={handleGuardarEditar}
+                        onCancelar={() => setModalEditar(false)}
+                    />
+                </Modal>
             )}
 
             {/* Modal marcar como aprobada */}
