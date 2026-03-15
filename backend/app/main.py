@@ -1,10 +1,9 @@
 #instancia de fastapi y registro de los routers
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import crear_db_y_tablas
 from .models import Plan, Materia, Evaluacion, Horario, Requisito, Evento
-from .routers import planes, materias, evaluaciones, horarios, requisitos, alertas, eventos
+from .routers import planes, materias, evaluaciones, horarios, requisitos, alertas, eventos, auth
 
 
 app = FastAPI()
@@ -28,4 +27,5 @@ app.include_router(horarios.router)
 app.include_router(requisitos.router)
 app.include_router(alertas.router)
 app.include_router(eventos.router)
+app.include_router(auth.router)
 
