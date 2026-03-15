@@ -1,23 +1,19 @@
 #conexion con sqlite, engine y session
+import os
 from sqlmodel import create_engine, SQLModel, Session
-from typing import Generator
-from sqlalchemy import event
 
-engine = create_engine("sqlite:///academic.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./academico.db")
 
-#creo las tablas
+# Render usa postgres:// pero SQLAlchemy necesita postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
+
 def crear_db_y_tablas():
     SQLModel.metadata.create_all(engine)
 
-#manejar la sesion
-def get_session() -> Generator:
+def get_session():
     with Session(engine) as session:
         yield session
-
-#activar las claves foraneas en sqlite
-@event.listens_for(engine, "connect")
-def activar_fk(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
 
