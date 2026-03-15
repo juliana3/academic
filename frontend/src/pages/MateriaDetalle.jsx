@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
-import { ArrowLeft } from "lucide-react"
+import { Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { obtenerMateria, inscribirMateria, reinscribirMateria, aprobarMateria } from "../api/materias";
 import { obtenerEvaluaciones, crearEvaluacion, eliminarEvaluacion, actualizarEvaluacion } from "../api/evaluaciones";
 import { obtenerHorarios, crearHorario, eliminarHorario, actualizarHorario } from "../api/horarios";
@@ -22,6 +21,8 @@ function MateriaDetalle(){
     const [horarioEditando, setHorarioEditando] = useState(null)
     const [formularioActivo, setFormularioActivo] = useState(null)
     const [confirmEliminar, setConfirmEliminar] = useState(null)
+    const [modalAprobar, setModalAprobar] = useState(false)
+    const [notaFinal, setNotaFinal] = useState("")
 
     const [formEvaluacion, setFormEvaluacion] = useState({
         tipo: "parcial",
@@ -53,10 +54,13 @@ function MateriaDetalle(){
     }
 
     const handleAprobar = () => {
-        aprobarMateria(materiaId).then(data => {
-            setMateria(data)
-            setError(null)
-        }).catch(err => setError(err.response.data.detail))
+        aprobarMateria(materiaId, notaFinal === "" ? null : parseFloat(notaFinal))
+            .then(data => {
+                setMateria(data)
+                setModalAprobar(false)
+                setNotaFinal("")
+                setError(null)
+            }).catch(err => setError(err.response.data.detail))
     }
 
     const handleEvaluacion = () => {
@@ -144,13 +148,13 @@ function MateriaDetalle(){
     if (!materia) return <p>Cargando...</p>
 
     return (
-        
         <div style={{ padding: "24px" }}>
 
-            <button className="ghost" onClick={() => navigate(-1)} 
+            <button className="ghost" onClick={() => navigate(-1)}
                 style={{ marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-secondary)" }}>
                 <ArrowLeft size={16} /> Volver
             </button>
+
             {/* Header materia */}
             <div style={{
                 background: "var(--bg-surface)",
@@ -187,7 +191,7 @@ function MateriaDetalle(){
                         <button onClick={handleReinscribir}>Reinscribirse</button>
                     )}
                     {materia.estado !== "aprobada" && (
-                        <button onClick={handleAprobar} style={{ background: "var(--estado-aprobada)" }}>
+                        <button onClick={() => setModalAprobar(true)} style={{ background: "var(--estado-aprobada)" }}>
                             Marcar como aprobada
                         </button>
                     )}
@@ -209,9 +213,7 @@ function MateriaDetalle(){
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                             <h2 style={{ margin: 0 }}>Evaluaciones</h2>
                             {evaluacionEditando === null && (
-                                <button onClick={() => setFormularioActivo("evaluacion")}>
-                                    + Agregar
-                                </button>
+                                <button onClick={() => setFormularioActivo("evaluacion")}>+ Agregar</button>
                             )}
                         </div>
 
@@ -268,9 +270,7 @@ function MateriaDetalle(){
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                             <h2 style={{ margin: 0 }}>Horarios</h2>
                             {horarioEditando === null && (
-                                <button onClick={() => setFormularioActivo("horario")}>
-                                    + Agregar
-                                </button>
+                                <button onClick={() => setFormularioActivo("horario")}>+ Agregar</button>
                             )}
                         </div>
 
@@ -314,6 +314,22 @@ function MateriaDetalle(){
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* Modal marcar como aprobada */}
+            {modalAprobar && (
+                <Modal titulo="Marcar como aprobada" onCerrar={() => setModalAprobar(false)}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <input type="number" placeholder="Nota final (opcional)"
+                            value={notaFinal}
+                            onChange={e => setNotaFinal(e.target.value)}
+                            style={{ width: "100%" }} />
+                        <div style={{ display: "flex", gap: "8px" }}>
+                            <button onClick={handleAprobar} style={{ background: "var(--estado-aprobada)" }}>Confirmar</button>
+                            <button className="ghost" onClick={() => setModalAprobar(false)}>Cancelar</button>
+                        </div>
+                    </div>
+                </Modal>
             )}
 
             {/* Modal agregar evaluacion */}

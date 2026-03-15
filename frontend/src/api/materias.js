@@ -73,8 +73,8 @@ async function reinscribirMateria(materiaId){
     }
 }
 
-const aprobarMateria = (materiaId) =>
-    api.post("/materias/"+materiaId+"/aprobar").then(res => res.data)
+const aprobarMateria = (materiaId, notaFinal = null) =>
+    api.post("/materias/"+materiaId+"/aprobar", {nota_final: notaFinal}).then(res => res.data)
 
 
 const importarMaterias = (planId, archivo) => {
