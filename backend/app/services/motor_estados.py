@@ -29,7 +29,7 @@ def cumple_regularidad(materia, evaluaciones):
     parciales = [e for e in evaluaciones if e.tipo == TipoEvaluacion.parcial and e.estado != EstadoEvaluacion.pendiente]
 
     if not parciales:
-        return True
+        return False
 
     tps_aprobados = [e for e in evaluaciones if e.tipo == TipoEvaluacion.tp and e.estado == EstadoEvaluacion.aprobado]
 
@@ -91,6 +91,11 @@ def calcular_estado(materia, evaluaciones):
         return EstadoMateria.cursando
     
     if not cumple_regularidad(materia, evaluaciones_limpias):
+        parciales_evaluados = [e for e in evaluaciones_limpias 
+            if e.tipo == TipoEvaluacion.parcial and e.estado != EstadoEvaluacion.pendiente
+        ]
+        if not parciales_evaluados:
+            return EstadoMateria.cursando
         return EstadoMateria.libre
     
     if materia.tipo_aprobacion == TipoAprobacion.solo_final:
